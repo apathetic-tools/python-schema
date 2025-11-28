@@ -1,0 +1,35 @@
+// Serger's configuration
+// This file defines how to stitch apathetic_schema into a single-file python script
+
+{
+  // Stitching configuration for the main serger package
+  "package": "apathetic_schema",
+
+  // Repository URL (appears in generated header)
+  "repo": "https://github.com/apathetic-tools/python-schema",
+
+  // License text for stitched output
+  "license": "License: MIT-a-NOAI\nFull text: https://github.com/apathetic-tools/python-schema/blob/main/LICENSE",      
+
+  // Source modules to include in the stitch
+  // These are glob patterns relative to the source directory
+  // Note: apathetic_logging is included from site-packages as it's a dependency
+  // that needs to be stitched together with apathetic_schema
+  "include": [
+    "src/apathetic_*/**/*.py",
+    "apathetic_logging/**/*.py",
+    "apathetic_utils/**/*.py"
+  ],
+
+  // Files to exclude from stitching
+  // These are often development-only or auto-generated utilities
+  "exclude": [
+    "__pycache__/**",
+    "*.pyc",
+    "**/__main__.py"     // Entry point, not stitched
+  ],
+
+  // Output file path (relative to project root)
+  // This will be the final single-file executable
+  "out": "dist/apathetic_schema.py"
+}

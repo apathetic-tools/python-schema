@@ -1,0 +1,90 @@
+# Jekyll configuration for GitHub Pages
+# general config reference: https://jekyllrb.com/docs/configuration/
+
+title: Apathetic Python Schema 🧩
+description: Lightweight validation for dict-based configs using TypedDicts
+url: https://apathetic-tools.github.io
+baseurl: /python-schema
+
+# supported plugins: https://pages.github.com/versions.json
+plugins:
+# GHP locked value
+  - jekyll-coffeescript
+  - jekyll-default-layout
+  - jekyll-gist
+  - jekyll-github-metadata
+  - jekyll-optional-front-matter
+  - jekyll-paginate
+  - jekyll-readme-index
+  - jekyll-titles-from-headings
+  - jekyll-relative-links
+# extra
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-remote-theme
+  - jemoji
+
+# Theme (using remote theme to get latest minima with dark mode support)
+remote_theme: jekyll/minima
+
+# Minima theme settings
+minima:
+  skin: solarized
+
+  # Navigation
+  nav_pages:
+    - index.md
+    - installation.md
+    - quickstart.md
+    - api.md
+    - examples.md
+    - contributing.md
+
+  hide_site_feed_link: true
+  social_links:
+    - title: Discord
+      icon: discord
+      url: "https://discord.gg/PW6GahZ7"
+    - title: GitHub Repository
+      icon: github
+      url: "https://github.com/apathetic-tools/python-schema"
+    - title: PyPI
+      icon: pypi
+      url: "https://pypi.org/project/apathetic-schema/"
+
+
+# Exclude files from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+
+# Site metadata
+author:
+  name: 😐 Apathetic Tools
+  url: https://apathetic-tools.github.io/
+
+license:
+  text: MIT-a-NOAI
+  url: https://github.com/apathetic-tools/python-logs/blob/main/LICENSE
+
+
+# Build settings
+lsi: false  # GHP locked value
+safe: true  # GHP locked value
+source: ["docs"]  # GHP locked value  # may need to to comment for local dev
+incremental: false  # GHP locked value
+highlighter: rouge  # GHP locked value
+gist:  # GHP locked value
+  noscript: false  # GHP locked value
+markdown: kramdown
+kramdown:  # GHP locked value
+  input: GFM
+  math_engine: mathjax  # GHP locked value
+  syntax_highlighter: rouge  # GHP locked value
+
+
