@@ -2,7 +2,7 @@
 
 [project]
 name = "apathetic-schema"
-version = "0.1.0"
+version = "0.0.1"
 description = "Type-based validation for dict-based configs."
 authors = [
     { name = "Apathetic Tools" }
