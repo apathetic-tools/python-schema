@@ -9,7 +9,9 @@ from typing import Any, TypedDict
 
 from typing_extensions import NotRequired
 
-import apathetic_schema.schema as amod_schema
+from apathetic_schema.validate_typed_dict import (
+    ApatheticSchema_Internal_ValidateTypedDict,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -26,9 +28,13 @@ class MiniBuild(TypedDict):
 
 def test_infer_type_label_basic_types() -> None:
     # --- execute and verify ---
-    assert "str" in amod_schema._infer_type_label(str)
-    assert "list" in amod_schema._infer_type_label(list[str])
-    assert "MiniBuild" in amod_schema._infer_type_label(MiniBuild)
+    assert "str" in ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(str)
+    assert "list" in ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(
+        list[str]
+    )
+    assert "MiniBuild" in ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(
+        MiniBuild
+    )
 
 
 def test_infer_type_label_handles_unusual_types() -> None:
@@ -38,10 +44,16 @@ def test_infer_type_label_handles_unusual_types() -> None:
     class Custom: ...
 
     # --- execute, verify ---
-    assert "Custom" in amod_schema._infer_type_label(Custom)
-    assert "Any" in amod_schema._infer_type_label(list[Any])
+    assert "Custom" in ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(
+        Custom
+    )
+    assert "Any" in ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(
+        list[Any]
+    )
     # Should fall back gracefully on unknown types
-    assert isinstance(amod_schema._infer_type_label(Any), str)
+    assert isinstance(
+        ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(Any), str
+    )
 
 
 class TestNotRequiredTypeLabels:
@@ -50,7 +62,7 @@ class TestNotRequiredTypeLabels:
     def test_notrequired_string_unwraps_to_str(self) -> None:
         """NotRequired[str] should unwrap to 'str' label."""
         nr = NotRequired[str]
-        label = amod_schema._infer_type_label(nr)
+        label = ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(nr)
 
         # --- verify ---
         assert "str" in label
@@ -59,7 +71,7 @@ class TestNotRequiredTypeLabels:
     def test_notrequired_int_unwraps_to_int(self) -> None:
         """NotRequired[int] should unwrap to 'int' label."""
         nr = NotRequired[int]
-        label = amod_schema._infer_type_label(nr)
+        label = ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(nr)
 
         # --- verify ---
         assert "int" in label
@@ -68,7 +80,7 @@ class TestNotRequiredTypeLabels:
     def test_notrequired_list_of_str(self) -> None:
         """NotRequired[list[str]] should unwrap to list[str]."""
         nr = NotRequired[list[str]]
-        label = amod_schema._infer_type_label(nr)
+        label = ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(nr)
 
         # --- verify ---
         assert "list" in label
@@ -77,7 +89,7 @@ class TestNotRequiredTypeLabels:
     def test_notrequired_typeddict(self) -> None:
         """NotRequired[TypedDict] should unwrap to TypedDict name."""
         nr = NotRequired[MiniBuild]
-        label = amod_schema._infer_type_label(nr)
+        label = ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(nr)
 
         # --- verify ---
         assert "MiniBuild" in label
@@ -86,7 +98,7 @@ class TestNotRequiredTypeLabels:
     def test_notrequired_union(self) -> None:
         """NotRequired[str | int] should unwrap properly."""
         nr = NotRequired[str | int]
-        label = amod_schema._infer_type_label(nr)
+        label = ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(nr)
 
         # --- verify ---
         # Should be some representation of the union

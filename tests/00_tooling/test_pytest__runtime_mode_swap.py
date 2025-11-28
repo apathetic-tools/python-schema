@@ -27,7 +27,7 @@ import apathetic_utils.runtime as amod_utils_runtime
 import pytest
 
 # Import a module from the main package to test
-import apathetic_schema.schema as amod_schema
+import apathetic_schema as amod_schema
 from tests.utils import PROGRAM_PACKAGE, PROGRAM_SCRIPT, PROJ_ROOT
 
 

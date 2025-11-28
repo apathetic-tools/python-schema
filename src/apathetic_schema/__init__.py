@@ -5,10 +5,8 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from .namespace import apathetic_schema as _apathetic_schema_class
-    from .schema import (
-        ApatheticSchema_SchemaErrorAggregator,
-        ApatheticSchema_ValidationSummary,
-    )
+    from .types import ApatheticSchema_ValidationSummary
+    from .warn_keys_once import ApatheticSchema_SchemaErrorAggregator
 
 # Get reference to the namespace class
 # In stitched mode: class is already defined in namespace.py (executed before this)
@@ -35,45 +33,37 @@ else:
     # Ensure the else block is not empty (build script may remove import)
     _ = apathetic_schema
 
-# Import types from schema module
-# Note: This import is after the namespace setup to avoid circular imports
-# Import constants from constants module
+# Export mixin classes and types directly
+from .check_schema_conformance import (  # noqa: E402
+    ApatheticSchema_Internal_CheckSchemaConformance,
+)
+from .collect_msg import ApatheticSchema_Internal_CollectMsg  # noqa: E402
 from .constants import ApatheticSchema_Internal_Constants  # noqa: E402
-from .schema import (  # noqa: E402
+from .flush_schema_aggregators import (  # noqa: E402
+    ApatheticSchema_Internal_FlushSchemaAggregators,
+)
+from .types import ApatheticSchema_ValidationSummary  # noqa: E402
+from .validate_typed_dict import (  # noqa: E402
+    ApatheticSchema_Internal_ValidateTypedDict,
+)
+from .warn_keys_once import (  # noqa: E402
+    ApatheticSchema_Internal_WarnKeysOnce,
     ApatheticSchema_SchemaErrorAggregator,
-    ApatheticSchema_ValidationSummary,
 )
 
-
-# Export with shorter names for backward compatibility
-SchemaErrorAggregator = ApatheticSchema_SchemaErrorAggregator
-ValidationSummary = ApatheticSchema_ValidationSummary
-AGG_STRICT_WARN = ApatheticSchema_Internal_Constants.AGG_STRICT_WARN
-AGG_WARN = ApatheticSchema_Internal_Constants.AGG_WARN
-
-
-# Export all namespace items for convenience
-# These are aliases to apathetic_schema.*
 
 # Note: In embedded builds, __init__.py is excluded from the stitch,
 # so this code never runs and no exports happen (only the class is available).
 # In singlefile/installed builds, __init__.py is included, so exports happen.
 
-# Schema validation functions
-check_schema_conformance = apathetic_schema.check_schema_conformance
-collect_msg = apathetic_schema.collect_msg
-flush_schema_aggregators = apathetic_schema.flush_schema_aggregators
-warn_keys_once = apathetic_schema.warn_keys_once
-
-
 __all__ = [
-    "AGG_STRICT_WARN",
-    "AGG_WARN",
-    "SchemaErrorAggregator",
-    "ValidationSummary",
+    "ApatheticSchema_Internal_CheckSchemaConformance",
+    "ApatheticSchema_Internal_CollectMsg",
+    "ApatheticSchema_Internal_Constants",
+    "ApatheticSchema_Internal_FlushSchemaAggregators",
+    "ApatheticSchema_Internal_ValidateTypedDict",
+    "ApatheticSchema_Internal_WarnKeysOnce",
+    "ApatheticSchema_SchemaErrorAggregator",
+    "ApatheticSchema_ValidationSummary",
     "apathetic_schema",
-    "check_schema_conformance",
-    "collect_msg",
-    "flush_schema_aggregators",
-    "warn_keys_once",
 ]

@@ -1,13 +1,12 @@
-# tests/0_independant/test_priv__validate_typed_dict.py
-"""Smoke tests for serger.config_validate internal validator helpers."""
-
-# we import `_` private for testing purposes only
-# ruff: noqa: SLF001
-# pyright: reportPrivateUsage=false
+# tests/0_independant/test_validate_typed_dict.py
+"""Tests for validate_typed_dict function."""
 
 from typing import Any, TypedDict
 
-import apathetic_schema.schema as amod_schema
+from apathetic_schema.types import ApatheticSchema_ValidationSummary
+from apathetic_schema.validate_typed_dict import (
+    ApatheticSchema_Internal_ValidateTypedDict,
+)
 from tests.utils import make_summary
 
 
@@ -25,7 +24,7 @@ class MiniBuild(TypedDict):
 
 def test_validate_typed_dict_accepts_dict() -> None:
     # --- execute ---
-    result = amod_schema._validate_typed_dict(
+    result = ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
         context="root",
         val={"include": ["src"], "out": "dist"},
         typedict_cls=MiniBuild,
@@ -44,7 +43,7 @@ def test_validate_typed_dict_rejects_non_dict() -> None:
     summary = make_summary()
 
     # --- patch and execute ---
-    ok = amod_schema._validate_typed_dict(
+    ok = ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
         "root",
         "notadict",
         MiniBuild,
@@ -64,7 +63,7 @@ def test_validate_typed_dict_detects_unknown_keys() -> None:
     summary = make_summary()
 
     # --- patch and execute ---
-    ok = amod_schema._validate_typed_dict(
+    ok = ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
         "root",
         {"include": ["x"], "out": "y", "weird": 1},
         MiniBuild,
@@ -87,7 +86,7 @@ def test_validate_typed_dict_allows_missing_field() -> None:
     val = {"out": "dist"}  # 'include' missing
 
     # --- execute ---
-    ok = amod_schema._validate_typed_dict(
+    ok = ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
         "ctx",
         val,
         MiniBuild,
@@ -112,8 +111,8 @@ def test_validate_typed_dict_nested_recursion() -> None:
     bad: Outer = {"inner": {"include": [123], "out": "dist"}}  # type: ignore[list-item]
 
     # --- patch, execute and verify ---
-    summary1 = amod_schema.ValidationSummary(True, [], [], [], True)
-    assert amod_schema._validate_typed_dict(
+    summary1 = ApatheticSchema_ValidationSummary(True, [], [], [], True)
+    assert ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
         "root",
         good,
         Outer,
@@ -123,8 +122,8 @@ def test_validate_typed_dict_nested_recursion() -> None:
         field_path="root",
     )
 
-    summary2 = amod_schema.ValidationSummary(True, [], [], [], True)
-    assert not amod_schema._validate_typed_dict(
+    summary2 = ApatheticSchema_ValidationSummary(True, [], [], [], True)
+    assert not ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
         "root",
         bad,
         Outer,
@@ -144,7 +143,7 @@ def test_validate_typed_dict_respects_prewarn() -> None:
     summary = make_summary()
 
     # --- execute ---
-    ok = amod_schema._validate_typed_dict(
+    ok = ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
         "ctx",
         cfg,
         MiniBuild,

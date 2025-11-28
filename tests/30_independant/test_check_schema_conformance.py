@@ -3,7 +3,13 @@
 
 from typing import Any, TypedDict
 
-import apathetic_schema.schema as amod_schema
+from apathetic_schema.check_schema_conformance import (
+    ApatheticSchema_Internal_CheckSchemaConformance,
+)
+from apathetic_schema.types import ApatheticSchema_ValidationSummary
+from apathetic_schema.validate_typed_dict import (
+    ApatheticSchema_Internal_ValidateTypedDict,
+)
 from tests.utils import make_summary
 
 
@@ -31,8 +37,8 @@ def test_check_schema_conformance_matches_list_validator() -> None:
     cfg: dict[str, Any] = {"include": ["src", 42], "out": "dist"}
 
     # --- patch and execute ---
-    summary1 = amod_schema.ValidationSummary(True, [], [], [], True)
-    ok_list = amod_schema._validate_list_value(  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
+    summary1 = ApatheticSchema_ValidationSummary(True, [], [], [], True)
+    ok_list = ApatheticSchema_Internal_ValidateTypedDict._validate_list_value(  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
         "ctx",
         "include",
         ["src", 42],
@@ -43,13 +49,15 @@ def test_check_schema_conformance_matches_list_validator() -> None:
         field_path="root.include",
     )
 
-    summary2 = amod_schema.ValidationSummary(True, [], [], [], True)
-    ok_schema = amod_schema.check_schema_conformance(
-        cfg,
-        schema,
-        "ctx",
-        strict_config=True,
-        summary=summary2,
+    summary2 = ApatheticSchema_ValidationSummary(True, [], [], [], True)
+    ok_schema = (
+        ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
+            cfg,
+            schema,
+            "ctx",
+            strict_config=True,
+            summary=summary2,
+        )
     )
 
     # --- verify ---
@@ -64,7 +72,7 @@ def test_check_schema_conformance_smoke() -> None:
     cfg: dict[str, Any] = {"include": ["src"], "out": "dist"}
 
     # --- execute ---
-    result = amod_schema.check_schema_conformance(
+    result = ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
         cfg,
         schema,
         "root",
@@ -85,7 +93,7 @@ def test_check_schema_conformance_respects_prewarn() -> None:
 
     # --- execute ---
     summary = make_summary()
-    ok = amod_schema.check_schema_conformance(
+    ok = ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
         cfg,
         schema,
         "ctx",
@@ -111,7 +119,7 @@ def test_accepts_matching_simple_types() -> None:
 
     # --- execute and validate ---
     assert (
-        amod_schema.check_schema_conformance(
+        ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
             cfg,
             schema,
             "root",
@@ -130,7 +138,7 @@ def test_rejects_wrong_type() -> None:
 
     # --- execute and validate ---
     assert (
-        amod_schema.check_schema_conformance(
+        ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
             cfg,
             schema,
             "root",
@@ -149,7 +157,7 @@ def test_list_of_str_ok() -> None:
 
     # --- execute and validate ---
     assert (
-        amod_schema.check_schema_conformance(
+        ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
             cfg,
             schema,
             "root",
@@ -168,7 +176,7 @@ def test_list_with_bad_inner_type() -> None:
 
     # --- execute and validate ---
     assert (
-        amod_schema.check_schema_conformance(
+        ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
             cfg,
             schema,
             "root",
@@ -187,7 +195,7 @@ def test_list_of_typeddict_allows_dicts() -> None:
 
     # --- execute and validate ---
     assert (
-        amod_schema.check_schema_conformance(
+        ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
             cfg,
             schema,
             "root",
@@ -206,7 +214,7 @@ def test_list_of_typeddict_rejects_non_dict() -> None:
 
     # --- execute and validate ---
     assert (
-        amod_schema.check_schema_conformance(
+        ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
             cfg,
             schema,
             "root",
@@ -225,7 +233,7 @@ def test_unknown_keys_fail_in_strict() -> None:
 
     # --- execute and validate ---
     assert (
-        amod_schema.check_schema_conformance(
+        ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
             cfg,
             schema,
             "ctx",
@@ -244,7 +252,7 @@ def test_unknown_keys_warn_in_non_strict() -> None:
 
     # --- execute and validate ---
     assert (
-        amod_schema.check_schema_conformance(
+        ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
             cfg,
             schema,
             "ctx",
@@ -264,7 +272,7 @@ def test_prewarn_keys_ignored() -> None:
     # --- execute and validate ---
     # prewarn tells it to skip foo
     assert (
-        amod_schema.check_schema_conformance(
+        ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
             cfg,
             schema,
             "ctx",
@@ -284,7 +292,7 @@ def test_list_of_typeddict_with_invalid_inner_type() -> None:
 
     # --- execute and validate ---
     assert (
-        amod_schema.check_schema_conformance(
+        ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
             cfg,
             schema,
             "root",
@@ -305,7 +313,7 @@ def test_extra_field_in_typeddict_strict() -> None:
 
     # --- execute and validate ---
     assert (
-        amod_schema.check_schema_conformance(
+        ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
             cfg,
             schema,
             "root",
@@ -321,7 +329,7 @@ def test_empty_schema_and_config() -> None:
     summary = make_summary()
 
     # --- execute and validate ---
-    assert amod_schema.check_schema_conformance(
+    assert ApatheticSchema_Internal_CheckSchemaConformance.check_schema_conformance(
         {},
         {},
         "root",

@@ -10,14 +10,16 @@ from typing import Any
 import apathetic_utils as mod_utils
 import pytest
 
-import apathetic_schema.schema as amod_schema
+from apathetic_schema.validate_typed_dict import (
+    ApatheticSchema_Internal_ValidateTypedDict,
+)
 from tests.utils import PROGRAM_PACKAGE, make_summary
 from tests.utils.constants import PATCH_STITCH_HINTS
 
 
 def test_validate_scalar_value_returns_bool() -> None:
     # --- execute ---
-    result = amod_schema._validate_scalar_value(
+    result = ApatheticSchema_Internal_ValidateTypedDict._validate_scalar_value(
         strict=True,
         context="ctx",
         key="x",
@@ -36,7 +38,7 @@ def test_validate_scalar_value_accepts_correct_type() -> None:
     summary = make_summary()
 
     # --- patch and execute ---
-    ok = amod_schema._validate_scalar_value(
+    ok = ApatheticSchema_Internal_ValidateTypedDict._validate_scalar_value(
         "ctx",
         "x",
         42,
@@ -58,7 +60,7 @@ def test_validate_scalar_value_rejects_wrong_type() -> None:
     summary = make_summary()
 
     # --- patch and execute ---
-    ok = amod_schema._validate_scalar_value(
+    ok = ApatheticSchema_Internal_ValidateTypedDict._validate_scalar_value(
         "ctx",
         "x",
         "abc",
@@ -92,7 +94,7 @@ def test_validate_scalar_value_handles_fallback_path(
         PROGRAM_PACKAGE,
         stitch_hints=PATCH_STITCH_HINTS,
     )
-    ok = amod_schema._validate_scalar_value(
+    ok = ApatheticSchema_Internal_ValidateTypedDict._validate_scalar_value(
         "ctx",
         "x",
         5,

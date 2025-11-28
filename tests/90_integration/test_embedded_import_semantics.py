@@ -112,16 +112,14 @@ def test_serger_build_import_semantics() -> None:
 
     # --- verify: import semantics ---
     # Verify that the stitched module can be imported and used
-    # Check that key exports from apathetic_schema are available
-    assert hasattr(stitched_module, "check_schema_conformance"), (
-        "check_schema_conformance should be available in stitched module"
+    # In stitched mode, __init__.py is excluded,
+    # so only the namespace class is available
+    assert hasattr(stitched_module, "apathetic_schema"), (
+        "apathetic_schema namespace class should be available in stitched module"
     )
-    assert hasattr(stitched_module, "ValidationSummary"), (
-        "ValidationSummary should be available in stitched module"
-    )
-    # Verify they are callable/usable
-    assert callable(stitched_module.check_schema_conformance), (
-        "check_schema_conformance should be callable"
+    # Verify the namespace class has the expected methods
+    assert hasattr(stitched_module.apathetic_schema, "check_schema_conformance"), (
+        "check_schema_conformance should be available on namespace class"
     )
 
     # Clean up - remove our test module and any submodules it might have created
@@ -205,16 +203,21 @@ def test_zipapp_import_semantics() -> None:
 
         # --- verify: import semantics ---
         # Verify that key exports from apathetic_schema are available
-        assert hasattr(zipapp_module, "check_schema_conformance"), (
-            f"{PROGRAM_PACKAGE}.check_schema_conformance should be available"
+        # In zipapp mode, __init__.py is included, so mixin classes are exported
+        assert hasattr(
+            zipapp_module, "ApatheticSchema_Internal_CheckSchemaConformance"
+        ), (
+            f"{PROGRAM_PACKAGE}.ApatheticSchema_Internal_CheckSchemaConformance "
+            "should be available"
         )
-        assert hasattr(zipapp_module, "ValidationSummary"), (
-            f"{PROGRAM_PACKAGE}.ValidationSummary should be available"
+        assert hasattr(zipapp_module, "ApatheticSchema_ValidationSummary"), (
+            f"{PROGRAM_PACKAGE}.ApatheticSchema_ValidationSummary should be available"
         )
-        # Verify they are callable/usable
-        assert callable(zipapp_module.check_schema_conformance), (
-            "check_schema_conformance should be callable"
-        )
+        # Verify they are usable
+        assert hasattr(
+            zipapp_module.ApatheticSchema_Internal_CheckSchemaConformance,
+            "check_schema_conformance",
+        ), "check_schema_conformance should be available on mixin class"
 
     finally:
         # Clean up sys.path

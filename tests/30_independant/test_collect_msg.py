@@ -1,6 +1,6 @@
 # tests/0_independant/test_collect_msg.py
 
-import apathetic_schema as amod_schema
+from apathetic_schema.collect_msg import ApatheticSchema_Internal_CollectMsg
 from tests.utils import make_summary
 
 
@@ -9,7 +9,7 @@ def test_collect_msg_appends_to_errors_when_is_error_true() -> None:
     summary = make_summary(strict=False)
 
     # --- execute ---
-    amod_schema.collect_msg(
+    ApatheticSchema_Internal_CollectMsg.collect_msg(
         strict=False,
         msg="bad thing",
         summary=summary,
@@ -27,7 +27,9 @@ def test_collect_msg_appends_to_strict_warnings_when_strict() -> None:
     summary = make_summary(strict=True)
 
     # --- execute ---
-    amod_schema.collect_msg(strict=True, msg="be careful", summary=summary)
+    ApatheticSchema_Internal_CollectMsg.collect_msg(
+        strict=True, msg="be careful", summary=summary
+    )
 
     # --- verify ---
     assert summary.strict_warnings == ["be careful"]
@@ -40,7 +42,9 @@ def test_collect_msg_appends_to_warnings_when_not_strict() -> None:
     summary = make_summary(strict=False)
 
     # --- execute ---
-    amod_schema.collect_msg(strict=False, msg="heads up", summary=summary)
+    ApatheticSchema_Internal_CollectMsg.collect_msg(
+        strict=False, msg="heads up", summary=summary
+    )
 
     # --- verify ---
     assert summary.warnings == ["heads up"]
@@ -53,7 +57,7 @@ def test_collect_msg_error_always_overrides_strict_mode() -> None:
     summary = make_summary(strict=True)
 
     # --- execute ---
-    amod_schema.collect_msg(
+    ApatheticSchema_Internal_CollectMsg.collect_msg(
         strict=True,
         msg="kaboom",
         summary=summary,
