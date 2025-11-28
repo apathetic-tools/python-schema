@@ -1,11 +1,14 @@
 # tests/0_independant/test_warn_keys_once.py
 """Tests for warn_keys_once function."""
 
-from apathetic_schema.warn_keys_once import (
-    ApatheticSchema_Internal_WarnKeysOnce,
-    ApatheticSchema_SchemaErrorAggregator,
-)
+from typing import TYPE_CHECKING
+
+import apathetic_schema as amod_schema
 from tests.utils import make_summary
+
+
+if TYPE_CHECKING:
+    from apathetic_schema.warn_keys_once import ApatheticSchema_SchemaErrorAggregator
 
 
 def test_warn_keys_once_no_bad_keys() -> None:
@@ -16,7 +19,7 @@ def test_warn_keys_once_no_bad_keys() -> None:
     bad_keys = {"bad_key", "deprecated"}
 
     # --- execute ---
-    valid, found = ApatheticSchema_Internal_WarnKeysOnce.warn_keys_once(
+    valid, found = amod_schema.warn_keys_once(
         tag="test",
         bad_keys=bad_keys,
         cfg=cfg,
@@ -44,7 +47,7 @@ def test_warn_keys_once_with_aggregator_non_strict() -> None:
     bad_keys = {"dry_run"}
 
     # --- execute ---
-    valid, found = ApatheticSchema_Internal_WarnKeysOnce.warn_keys_once(
+    valid, found = amod_schema.warn_keys_once(
         tag="dry-run",
         bad_keys=bad_keys,
         cfg=cfg,
@@ -78,7 +81,7 @@ def test_warn_keys_once_with_aggregator_strict() -> None:
     bad_keys = {"dry_run"}
 
     # --- execute ---
-    valid, found = ApatheticSchema_Internal_WarnKeysOnce.warn_keys_once(
+    valid, found = amod_schema.warn_keys_once(
         tag="dry-run",
         bad_keys=bad_keys,
         cfg=cfg,
@@ -109,7 +112,7 @@ def test_warn_keys_once_with_aggregator_multiple_contexts() -> None:
 
     # --- execute ---
     # First call
-    ApatheticSchema_Internal_WarnKeysOnce.warn_keys_once(
+    amod_schema.warn_keys_once(
         tag="dry-run",
         bad_keys=bad_keys,
         cfg={"dry_run": True},
@@ -121,7 +124,7 @@ def test_warn_keys_once_with_aggregator_multiple_contexts() -> None:
     )
 
     # Second call with same tag
-    ApatheticSchema_Internal_WarnKeysOnce.warn_keys_once(
+    amod_schema.warn_keys_once(
         tag="dry-run",
         bad_keys=bad_keys,
         cfg={"dry_run": False},
@@ -148,7 +151,7 @@ def test_warn_keys_once_without_aggregator_non_strict() -> None:
     bad_keys = {"dry_run"}
 
     # --- execute ---
-    valid, found = ApatheticSchema_Internal_WarnKeysOnce.warn_keys_once(
+    valid, found = amod_schema.warn_keys_once(
         tag="dry-run",
         bad_keys=bad_keys,
         cfg=cfg,
@@ -177,7 +180,7 @@ def test_warn_keys_once_without_aggregator_strict() -> None:
     bad_keys = {"dry_run"}
 
     # --- execute ---
-    valid, found = ApatheticSchema_Internal_WarnKeysOnce.warn_keys_once(
+    valid, found = amod_schema.warn_keys_once(
         tag="dry-run",
         bad_keys=bad_keys,
         cfg=cfg,
@@ -207,7 +210,7 @@ def test_warn_keys_once_case_insensitive_matching() -> None:
     bad_keys = {"dry_run"}  # Lowercase
 
     # --- execute ---
-    _valid, found = ApatheticSchema_Internal_WarnKeysOnce.warn_keys_once(
+    _valid, found = amod_schema.warn_keys_once(
         tag="test",
         bad_keys=bad_keys,
         cfg=cfg,
@@ -234,7 +237,7 @@ def test_warn_keys_once_multiple_bad_keys() -> None:
     bad_keys = {"dry_run", "deprecated"}
 
     # --- execute ---
-    _valid, found = ApatheticSchema_Internal_WarnKeysOnce.warn_keys_once(
+    _valid, found = amod_schema.warn_keys_once(
         tag="test",
         bad_keys=bad_keys,
         cfg=cfg,
@@ -261,7 +264,7 @@ def test_warn_keys_once_message_formatting() -> None:
     bad_keys = {"bad"}
 
     # --- execute ---
-    ApatheticSchema_Internal_WarnKeysOnce.warn_keys_once(
+    amod_schema.warn_keys_once(
         tag="test",
         bad_keys=bad_keys,
         cfg=cfg,
