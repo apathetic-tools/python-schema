@@ -18,7 +18,7 @@
 ## Quick Start
 
 ```python
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict
 from typing import TypedDict
 from pathlib import Path
@@ -36,10 +36,10 @@ with Path("config.json").open() as f:
     config = json.load(f)
 
 # Validate against TypedDict schema
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 schema = schema_from_typeddict(AppConfig)
 
-is_valid = check_schema_conformance(
+is_valid = apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in configuration file",

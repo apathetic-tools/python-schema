@@ -23,7 +23,7 @@ permalink: /
 ## Quick Example
 
 ```python
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict, load_jsonc
 from typing import TypedDict
 from pathlib import Path
@@ -39,10 +39,10 @@ class AppConfig(TypedDict):
 config = load_jsonc(Path("config.jsonc"))
 
 # Validate against TypedDict schema
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 schema = schema_from_typeddict(AppConfig)
 
-is_valid = check_schema_conformance(
+is_valid = apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in configuration file",
@@ -59,6 +59,7 @@ if not summary.valid:
 
 - **Python 3.10+**
 - **apathetic-utils** (>=0.2.1,<2.0.0) - for `schema_from_typeddict`, `safe_isinstance`, and other utilities
+- **apathetic-logging** (>=0.3.2,<2.0.0) - for logging functionality
 
 ## Installation
 

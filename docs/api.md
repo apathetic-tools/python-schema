@@ -12,22 +12,22 @@ Complete API documentation for Apathetic Python Schema.
 
 | Category | Functions & Classes |
 |----------|-------------------|
-| **Core Validation** | [`check_schema_conformance()`](#check_schema_conformance) |
-| **Error Handling** | [`ValidationSummary`](#validationsummary), [`SchemaErrorAggregator`](#schemaerroraggregator), [`collect_msg()`](#collect_msg), [`flush_schema_aggregators()`](#flush_schema_aggregators) |
-| **Key Warnings** | [`warn_keys_once()`](#warn_keys_once) |
+| **Core Validation** | [`apathetic_schema.check_schema_conformance()`](#check_schema_conformance) |
+| **Error Handling** | [`ApatheticSchema_ValidationSummary`](#validationsummary), [`ApatheticSchema_SchemaErrorAggregator`](#schemaerroraggregator), [`apathetic_schema.collect_msg()`](#collect_msg), [`apathetic_schema.flush_schema_aggregators()`](#flush_schema_aggregators) |
+| **Key Warnings** | [`apathetic_schema.warn_keys_once()`](#warn_keys_once) |
 
 ## Core Validation
 
 ### check_schema_conformance
 
 ```python
-check_schema_conformance(
+apathetic_schema.check_schema_conformance(
     cfg: dict[str, Any],
     schema: dict[str, Any],
     context: str,
     *,
     strict_config: bool,
-    summary: ValidationSummary,
+    summary: ApatheticSchema_ValidationSummary,
     prewarn: set[str] | None = None,
     ignore_keys: set[str] | None = None,
     base_path: str = "root",
@@ -47,7 +47,7 @@ This is the main validation function that checks if a configuration dictionary c
 | `schema` | `dict[str, Any]` | The schema dictionary (from `schema_from_typeddict`) |
 | `context` | `str` | Context string for error messages (e.g., "in configuration file") |
 | `strict_config` | `bool` | If `True`, warnings are treated as errors |
-| `summary` | `ValidationSummary` | Validation summary object (modified in place) |
+| `summary` | `ApatheticSchema_ValidationSummary` | Validation summary object (modified in place) |
 | `prewarn` | `set[str] \| None` | Set of keys to pre-warn about (default: `None`) |
 | `ignore_keys` | `set[str] \| None` | Set of keys to ignore during validation (default: `None`) |
 | `base_path` | `str` | Base path for field paths in error messages (default: `"root"`) |
@@ -59,7 +59,7 @@ This is the main validation function that checks if a configuration dictionary c
 **Example:**
 
 ```python
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict
 from typing import TypedDict
 
@@ -69,10 +69,10 @@ class AppConfig(TypedDict):
     debug: bool
 
 config = {"name": "MyApp", "port": 8080, "debug": True}
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 schema = schema_from_typeddict(AppConfig)
 
-is_valid = check_schema_conformance(
+is_valid = apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in configuration file",
@@ -87,7 +87,7 @@ is_valid = check_schema_conformance(
 
 ```python
 @dataclass
-class ValidationSummary:
+class ApatheticSchema_ValidationSummary:
     valid: bool
     errors: list[str]
     strict_warnings: list[str]
@@ -110,9 +110,9 @@ A dataclass that holds the results of schema validation.
 **Example:**
 
 ```python
-from apathetic_schema import ValidationSummary
+from apathetic_schema import ApatheticSchema_ValidationSummary
 
-summary = ValidationSummary(
+summary = ApatheticSchema_ValidationSummary(
     valid=True,
     errors=[],
     strict_warnings=[],
@@ -133,7 +133,7 @@ if not summary.valid:
 ### SchemaErrorAggregator
 
 ```python
-SchemaErrorAggregator = dict[str, dict[str, dict[str, _SchErrAggEntry]]]
+ApatheticSchema_SchemaErrorAggregator = dict[str, dict[str, dict[str, _SchErrAggEntry]]]
 ```
 
 A type alias for a nested dictionary structure that aggregates validation errors by severity and tag.
@@ -156,9 +156,9 @@ A type alias for a nested dictionary structure that aggregates validation errors
 **Example:**
 
 ```python
-from apathetic_schema import SchemaErrorAggregator
+from apathetic_schema import ApatheticSchema_SchemaErrorAggregator
 
-agg: SchemaErrorAggregator = {}
+agg: ApatheticSchema_SchemaErrorAggregator = {}
 
 # Used with warn_keys_once and flush_schema_aggregators
 ```
@@ -166,11 +166,11 @@ agg: SchemaErrorAggregator = {}
 ### collect_msg
 
 ```python
-collect_msg(
+apathetic_schema.collect_msg(
     msg: str,
     *,
     strict: bool,
-    summary: ValidationSummary,
+    summary: ApatheticSchema_ValidationSummary,
     is_error: bool = False,
 ) -> None
 ```
@@ -183,17 +183,17 @@ Route a validation message to the appropriate bucket in the summary.
 |-----------|------|-------------|
 | `msg` | `str` | The message to collect |
 | `strict` | `bool` | If `True`, warnings go to `strict_warnings` |
-| `summary` | `ValidationSummary` | The summary object (modified in place) |
+| `summary` | `ApatheticSchema_ValidationSummary` | The summary object (modified in place) |
 | `is_error` | `bool` | If `True`, message is treated as an error (default: `False`) |
 
 **Example:**
 
 ```python
-from apathetic_schema import collect_msg, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 
-collect_msg(
+apathetic_schema.collect_msg(
     "Unknown key 'extra' in configuration",
     strict=False,
     summary=summary,
@@ -204,10 +204,10 @@ collect_msg(
 ### flush_schema_aggregators
 
 ```python
-flush_schema_aggregators(
+apathetic_schema.flush_schema_aggregators(
     *,
-    summary: ValidationSummary,
-    agg: SchemaErrorAggregator,
+    summary: ApatheticSchema_ValidationSummary,
+    agg: ApatheticSchema_SchemaErrorAggregator,
 ) -> None
 ```
 
@@ -217,20 +217,20 @@ Flush aggregated errors from the aggregator into the summary.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `summary` | `ValidationSummary` | The summary object (modified in place) |
-| `agg` | `SchemaErrorAggregator` | The error aggregator |
+| `summary` | `ApatheticSchema_ValidationSummary` | The summary object (modified in place) |
+| `agg` | `ApatheticSchema_SchemaErrorAggregator` | The error aggregator |
 
 **Example:**
 
 ```python
-from apathetic_schema import flush_schema_aggregators, ValidationSummary, SchemaErrorAggregator
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary, ApatheticSchema_SchemaErrorAggregator
 
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
-agg: SchemaErrorAggregator = {}
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+agg: ApatheticSchema_SchemaErrorAggregator = {}
 
 # ... populate agg with warn_keys_once ...
 
-flush_schema_aggregators(summary=summary, agg=agg)
+apathetic_schema.flush_schema_aggregators(summary=summary, agg=agg)
 ```
 
 ## Key Warnings
@@ -238,7 +238,7 @@ flush_schema_aggregators(summary=summary, agg=agg)
 ### warn_keys_once
 
 ```python
-warn_keys_once(
+apathetic_schema.warn_keys_once(
     tag: str,
     bad_keys: set[str],
     cfg: dict[str, Any],
@@ -246,8 +246,8 @@ warn_keys_once(
     msg: str,
     *,
     strict_config: bool,
-    summary: ValidationSummary,
-    agg: SchemaErrorAggregator | None,
+    summary: ApatheticSchema_ValidationSummary,
+    agg: ApatheticSchema_SchemaErrorAggregator | None,
 ) -> tuple[bool, set[str]]
 ```
 
@@ -263,8 +263,8 @@ Warn about specific keys once, aggregating warnings by tag.
 | `context` | `str` | Context string for error messages |
 | `msg` | `str` | Warning message template |
 | `strict_config` | `bool` | If `True`, warnings are treated as errors |
-| `summary` | `ValidationSummary` | The summary object (modified in place) |
-| `agg` | `SchemaErrorAggregator \| None` | Optional aggregator for warnings |
+| `summary` | `ApatheticSchema_ValidationSummary` | The summary object (modified in place) |
+| `agg` | `ApatheticSchema_SchemaErrorAggregator \| None` | Optional aggregator for warnings |
 
 **Returns:**
 - `tuple[bool, set[str]]`: A tuple of (is_valid, found_keys)
@@ -272,15 +272,15 @@ Warn about specific keys once, aggregating warnings by tag.
 **Example:**
 
 ```python
-from apathetic_schema import warn_keys_once, ValidationSummary, SchemaErrorAggregator
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary, ApatheticSchema_SchemaErrorAggregator
 
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
-agg: SchemaErrorAggregator = {}
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+agg: ApatheticSchema_SchemaErrorAggregator = {}
 
 config = {"dry_run": True, "other": "value"}
 bad_keys = {"dry_run"}
 
-is_valid, found = warn_keys_once(
+is_valid, found = apathetic_schema.warn_keys_once(
     "dry-run",
     bad_keys,
     config,
@@ -297,7 +297,7 @@ is_valid, found = warn_keys_once(
 Apathetic Python Schema works seamlessly with `apathetic-utils` for schema extraction:
 
 ```python
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict
 from typing import TypedDict
 
@@ -309,8 +309,8 @@ class Config(TypedDict):
 schema = schema_from_typeddict(Config)
 
 # Validate configuration
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
-check_schema_conformance(
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+apathetic_schema.check_schema_conformance(
     {"name": "MyApp", "port": 8080},
     schema,
     "in config",

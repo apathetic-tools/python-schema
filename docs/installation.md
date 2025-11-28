@@ -53,6 +53,7 @@ This method is useful for:
 
 - **Python 3.10+**
 - **apathetic-utils** (>=0.2.1,<2.0.0) - for `schema_from_typeddict`, `safe_isinstance`, and other utilities
+- **apathetic-logging** (>=0.3.2,<2.0.0) - for logging functionality
 
 Apathetic Python Schema has minimal runtime dependencies — it uses `apathetic-utils` for TypedDict schema extraction and type checking utilities.
 
@@ -61,7 +62,7 @@ Apathetic Python Schema has minimal runtime dependencies — it uses `apathetic-
 After installation, verify that it works:
 
 ```python
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict
 from typing import TypedDict
 
@@ -69,10 +70,10 @@ class TestConfig(TypedDict):
     name: str
 
 config = {"name": "test"}
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 schema = schema_from_typeddict(TestConfig)
 
-check_schema_conformance(
+apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in test",

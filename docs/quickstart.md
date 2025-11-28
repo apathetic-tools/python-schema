@@ -13,7 +13,7 @@ Get up and running with Apathetic Python Schema in minutes.
 The simplest way to use Apathetic Schema is to validate a dict against a TypedDict schema:
 
 ```python
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict
 from typing import TypedDict
 
@@ -33,10 +33,10 @@ config = {
 }
 
 # Validate against TypedDict schema
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 schema = schema_from_typeddict(AppConfig)
 
-is_valid = check_schema_conformance(
+is_valid = apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in configuration file",
@@ -58,7 +58,7 @@ else:
 JSONC (JSON with Comments) files are commonly used for configuration:
 
 ```python
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict, load_jsonc
 from typing import TypedDict
 from pathlib import Path
@@ -71,10 +71,10 @@ class Config(TypedDict):
 config = load_jsonc(Path("config.jsonc"))
 
 # Validate it
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 schema = schema_from_typeddict(Config)
 
-check_schema_conformance(
+apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in config.jsonc",
@@ -88,7 +88,7 @@ check_schema_conformance(
 ```python
 import json
 from pathlib import Path
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict
 from typing import TypedDict
 
@@ -101,10 +101,10 @@ with Path("config.json").open() as f:
     config = json.load(f)
 
 # Validate it
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 schema = schema_from_typeddict(Config)
 
-check_schema_conformance(
+apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in config.json",
@@ -118,7 +118,7 @@ check_schema_conformance(
 Apathetic Schema supports nested TypedDicts for complex configurations:
 
 ```python
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict
 from typing import TypedDict
 
@@ -140,10 +140,10 @@ config = {
     }
 }
 
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 schema = schema_from_typeddict(AppConfig)
 
-check_schema_conformance(
+apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in configuration",
@@ -157,7 +157,7 @@ check_schema_conformance(
 Validate lists of items:
 
 ```python
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict
 from typing import TypedDict
 
@@ -172,10 +172,10 @@ config = {
     "ports": [8080, 8081]
 }
 
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 schema = schema_from_typeddict(AppConfig)
 
-check_schema_conformance(
+apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in configuration",
@@ -189,7 +189,7 @@ check_schema_conformance(
 Validate lists of nested objects:
 
 ```python
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict
 from typing import TypedDict
 
@@ -209,10 +209,10 @@ config = {
     ]
 }
 
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 schema = schema_from_typeddict(AppConfig)
 
-check_schema_conformance(
+apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in configuration",
@@ -226,7 +226,7 @@ check_schema_conformance(
 Enable strict mode to treat warnings as errors:
 
 ```python
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict
 from typing import TypedDict
 
@@ -240,11 +240,11 @@ config = {
     "unknown_key": "value"  # This will be an error in strict mode
 }
 
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 schema = schema_from_typeddict(Config)
 
 # strict_config=True treats unknown keys as errors
-check_schema_conformance(
+apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in configuration",
@@ -259,10 +259,9 @@ Use `SchemaErrorAggregator` to collect and organize validation errors:
 
 ```python
 from apathetic_schema import (
-    check_schema_conformance,
-    ValidationSummary,
-    SchemaErrorAggregator,
-    flush_schema_aggregators,
+    apathetic_schema,
+    ApatheticSchema_ValidationSummary,
+    ApatheticSchema_SchemaErrorAggregator,
 )
 from apathetic_utils import schema_from_typeddict
 from typing import TypedDict
@@ -276,11 +275,11 @@ config = {
     "port": "invalid"  # Wrong type
 }
 
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
-agg: SchemaErrorAggregator = {}
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+agg: ApatheticSchema_SchemaErrorAggregator = {}
 schema = schema_from_typeddict(Config)
 
-check_schema_conformance(
+apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in configuration",
@@ -289,7 +288,7 @@ check_schema_conformance(
 )
 
 # Flush aggregated errors
-flush_schema_aggregators(summary=summary, agg=agg)
+apathetic_schema.flush_schema_aggregators(summary=summary, agg=agg)
 
 if not summary.valid:
     print("Errors:", summary.errors)
@@ -301,7 +300,7 @@ if not summary.valid:
 Sometimes you want to validate only part of a config:
 
 ```python
-from apathetic_schema import check_schema_conformance, ValidationSummary
+from apathetic_schema import apathetic_schema, ApatheticSchema_ValidationSummary
 from apathetic_utils import schema_from_typeddict
 from typing import TypedDict
 
@@ -316,10 +315,10 @@ config = {
     "metadata": {"extra": "data"}  # This will be ignored
 }
 
-summary = ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
+summary = ApatheticSchema_ValidationSummary(valid=True, errors=[], strict_warnings=[], warnings=[], strict=False)
 schema = schema_from_typeddict(Config)
 
-check_schema_conformance(
+apathetic_schema.check_schema_conformance(
     config,
     schema,
     "in configuration",
