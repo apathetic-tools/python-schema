@@ -18,6 +18,7 @@ from pathlib import Path
 
 import apathetic_utils
 import pytest
+
 from tests.utils.constants import PROJ_ROOT
 
 
