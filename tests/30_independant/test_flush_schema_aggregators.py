@@ -11,8 +11,8 @@ from tests.utils import make_summary
 def test_flush_schema_aggregators_flushes_strict_bucket() -> None:
     # --- setup ---
     summary = make_summary(strict=True)
-    agg: amod_schema.SchemaErrorAggregator = cast(
-        "amod_schema.SchemaErrorAggregator",
+    agg: amod_schema.ApatheticSchema_SchemaErrorAggregator = cast(
+        "amod_schema.ApatheticSchema_SchemaErrorAggregator",
         {
             amod_schema.AGG_STRICT_WARN: {
                 "dry-run": {
@@ -44,8 +44,8 @@ def test_flush_schema_aggregators_flushes_strict_bucket() -> None:
 def test_flush_schema_aggregators_flushes_warning_bucket() -> None:
     # --- setup ---
     summary = make_summary(strict=False)
-    agg: amod_schema.SchemaErrorAggregator = cast(
-        "amod_schema.SchemaErrorAggregator",
+    agg: amod_schema.ApatheticSchema_SchemaErrorAggregator = cast(
+        "amod_schema.ApatheticSchema_SchemaErrorAggregator",
         {
             amod_schema.AGG_WARN: {
                 "root-only": {
@@ -73,8 +73,8 @@ def test_flush_schema_aggregators_flushes_warning_bucket() -> None:
 def test_flush_schema_aggregators_cleans_context_prefixes() -> None:
     # --- setup ---
     summary = make_summary(strict=True)
-    agg: amod_schema.SchemaErrorAggregator = cast(
-        "amod_schema.SchemaErrorAggregator",
+    agg: amod_schema.ApatheticSchema_SchemaErrorAggregator = cast(
+        "amod_schema.ApatheticSchema_SchemaErrorAggregator",
         {
             amod_schema.AGG_STRICT_WARN: {
                 "noop": {

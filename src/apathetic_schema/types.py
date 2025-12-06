@@ -10,8 +10,8 @@ from typing import TypeAlias, TypedDict
 # --- TypedDict definitions ---------------------------------------------
 
 
-class ApatheticSchema_Internal_SchErrAggEntry(TypedDict):  # noqa: N801
-    """Internal type for schema error aggregator entries."""
+class ApatheticSchema_SchErrAggEntry(TypedDict):  # noqa: N801
+    """Type for schema error aggregator entries."""
 
     msg: str
     contexts: list[str]
@@ -29,8 +29,8 @@ class ApatheticSchema_Internal_SchErrAggEntry(TypedDict):  # noqa: N801
 #   },
 #   "warnings": { ... }
 # }
-ApatheticSchema_Internal_SchemaErrorAggregator: TypeAlias = dict[
-    str, dict[str, dict[str, ApatheticSchema_Internal_SchErrAggEntry]]
+ApatheticSchema_SchemaErrorAggregator: TypeAlias = dict[
+    str, dict[str, dict[str, ApatheticSchema_SchErrAggEntry]]
 ]
 
 
@@ -41,16 +41,6 @@ class ApatheticSchema_Internal_Types:  # noqa: N801  # pyright: ignore[reportUnu
     apathetic_schema namespace. When mixed into apathetic_schema, it provides
     access to these types via the namespace class.
     """
-
-    # --- TypedDict definitions ---------------------------------------------
-
-    # Reference to module-level TypedDict
-    SchErrAggEntry = ApatheticSchema_Internal_SchErrAggEntry
-
-    # --- Type aliases -------------------------------------------------------
-
-    # Reference to module-level type alias
-    SchemaErrorAggregator = ApatheticSchema_Internal_SchemaErrorAggregator
 
     # --- Dataclasses --------------------------------------------------------
 
@@ -72,5 +62,6 @@ class ApatheticSchema_Internal_Types:  # noqa: N801  # pyright: ignore[reportUnu
 
 # Export types with ApatheticSchema_ prefix for external packages
 # (e.g., serger) that import directly from types module
-ApatheticSchema_SchemaErrorAggregator = ApatheticSchema_Internal_SchemaErrorAggregator
+# Note: ApatheticSchema_SchErrAggEntry and ApatheticSchema_SchemaErrorAggregator
+# are already defined above with the correct prefix
 ApatheticSchema_ValidationSummary = ApatheticSchema_Internal_Types.ValidationSummary

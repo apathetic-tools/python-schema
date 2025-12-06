@@ -5,10 +5,13 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from .namespace import apathetic_schema as _apathetic_schema_class
-    from .types import (
-        ApatheticSchema_Internal_SchemaErrorAggregator,
-        ApatheticSchema_Internal_SchErrAggEntry,
-    )
+
+# Import types for export (available at both type checking and runtime)
+from .types import (
+    ApatheticSchema_SchemaErrorAggregator,
+    ApatheticSchema_SchErrAggEntry,
+)
+
 
 # Get reference to the namespace class
 # In stitched mode: class is already defined in namespace.py (executed before this)
@@ -51,15 +54,9 @@ DEFAULT_HINT_CUTOFF = apathetic_schema.DEFAULT_HINT_CUTOFF
 AGG_STRICT_WARN = apathetic_schema.AGG_STRICT_WARN
 AGG_WARN = apathetic_schema.AGG_WARN
 
-# Export type aliases and dataclasses from apathetic_schema class
-# For type checking, use the module-level type alias directly
-# At runtime, use the class attribute (which references the same type)
-if TYPE_CHECKING:
-    SchErrAggEntry = ApatheticSchema_Internal_SchErrAggEntry
-    SchemaErrorAggregator = ApatheticSchema_Internal_SchemaErrorAggregator
-else:
-    SchErrAggEntry = apathetic_schema.SchErrAggEntry
-    SchemaErrorAggregator = apathetic_schema.SchemaErrorAggregator
+# Export type aliases and dataclasses
+# Types are imported from types module above
+# ValidationSummary comes from apathetic_schema class
 ValidationSummary = apathetic_schema.ValidationSummary
 
 
@@ -67,8 +64,8 @@ __all__ = [
     "AGG_STRICT_WARN",
     "AGG_WARN",
     "DEFAULT_HINT_CUTOFF",
-    "SchErrAggEntry",
-    "SchemaErrorAggregator",
+    "ApatheticSchema_SchErrAggEntry",
+    "ApatheticSchema_SchemaErrorAggregator",
     "ValidationSummary",
     "apathetic_schema",
     "check_schema_conformance",

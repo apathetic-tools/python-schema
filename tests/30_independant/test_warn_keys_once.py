@@ -44,7 +44,7 @@ def test_warn_keys_once_with_aggregator_non_strict() -> None:
     """When agg is provided and strict=False, should aggregate warnings."""
     # --- setup ---
     summary = make_summary(strict=False)
-    agg: amod_schema.SchemaErrorAggregator = {}
+    agg: amod_schema.ApatheticSchema_SchemaErrorAggregator = {}
     cfg = {"dry_run": True, "valid": "value"}
     bad_keys = {"dry_run"}
 
@@ -65,7 +65,10 @@ def test_warn_keys_once_with_aggregator_non_strict() -> None:
     assert found == {"dry_run"}
     assert "warnings" in agg
     assert "dry-run" in agg["warnings"]
-    entry = cast("amod_schema.SchErrAggEntry", agg["warnings"]["dry-run"])
+    entry = cast(
+        "amod_schema.ApatheticSchema_SchErrAggEntry",
+        agg["warnings"]["dry-run"],
+    )
     expected_msg = "The 'dry-run' key is deprecated {ctx}"
     assert entry["msg"] == expected_msg
     assert "in top-level configuration" in entry["contexts"]
@@ -78,7 +81,7 @@ def test_warn_keys_once_with_aggregator_strict() -> None:
     """When agg is provided and strict=True, should aggregate strict warnings."""
     # --- setup ---
     summary = make_summary(strict=True)
-    agg: amod_schema.SchemaErrorAggregator = {}
+    agg: amod_schema.ApatheticSchema_SchemaErrorAggregator = {}
     cfg = {"dry_run": True}
     bad_keys = {"dry_run"}
 
@@ -99,7 +102,10 @@ def test_warn_keys_once_with_aggregator_strict() -> None:
     assert found == {"dry_run"}
     assert "strict_warnings" in agg
     assert "dry-run" in agg["strict_warnings"]
-    entry = cast("amod_schema.SchErrAggEntry", agg["strict_warnings"]["dry-run"])
+    entry = cast(
+        "amod_schema.ApatheticSchema_SchErrAggEntry",
+        agg["strict_warnings"]["dry-run"],
+    )
     expected_msg = "Deprecated key {keys} {ctx}"
     assert entry["msg"] == expected_msg
     assert "in config" in entry["contexts"]
@@ -109,7 +115,7 @@ def test_warn_keys_once_with_aggregator_multiple_contexts() -> None:
     """Aggregator should collect multiple contexts for the same tag."""
     # --- setup ---
     summary = make_summary()
-    agg: amod_schema.SchemaErrorAggregator = {}
+    agg: amod_schema.ApatheticSchema_SchemaErrorAggregator = {}
     bad_keys = {"dry_run"}
 
     # --- execute ---
@@ -138,7 +144,10 @@ def test_warn_keys_once_with_aggregator_multiple_contexts() -> None:
     )
 
     # --- verify ---
-    entry = cast("amod_schema.SchErrAggEntry", agg["warnings"]["dry-run"])
+    entry = cast(
+        "amod_schema.ApatheticSchema_SchErrAggEntry",
+        agg["warnings"]["dry-run"],
+    )
     expected_context_count = 2
     assert len(entry["contexts"]) == expected_context_count
     assert "context1" in entry["contexts"]

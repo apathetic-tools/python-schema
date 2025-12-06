@@ -10,7 +10,10 @@ from .constants import ApatheticSchema_Internal_Constants
 
 
 if TYPE_CHECKING:
-    from .types import ApatheticSchema_Internal_Types
+    from .types import (
+        ApatheticSchema_Internal_Types,
+        ApatheticSchema_SchemaErrorAggregator,
+    )
 
 
 class ApatheticSchema_Internal_FlushSchemaAggregators:  # noqa: N801  # pyright: ignore[reportUnusedClass]
@@ -25,7 +28,7 @@ class ApatheticSchema_Internal_FlushSchemaAggregators:  # noqa: N801  # pyright:
     def flush_schema_aggregators(
         *,
         summary: ApatheticSchema_Internal_Types.ValidationSummary,
-        agg: ApatheticSchema_Internal_Types.SchemaErrorAggregator,  # type: ignore[valid-type]
+        agg: ApatheticSchema_SchemaErrorAggregator,
     ) -> None:
         """Flush aggregated schema validation messages to the summary.
 
@@ -57,8 +60,8 @@ class ApatheticSchema_Internal_FlushSchemaAggregators:  # noqa: N801  # pyright:
                 )
             bucket.clear()
 
-        strict_bucket = agg.get(ApatheticSchema_Internal_Constants.AGG_STRICT_WARN, {})  # type: ignore[attr-defined]
-        warn_bucket = agg.get(ApatheticSchema_Internal_Constants.AGG_WARN, {})  # type: ignore[attr-defined]
+        strict_bucket = agg.get(ApatheticSchema_Internal_Constants.AGG_STRICT_WARN, {})
+        warn_bucket = agg.get(ApatheticSchema_Internal_Constants.AGG_WARN, {})
 
         if strict_bucket:
             summary.valid = False

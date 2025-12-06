@@ -12,6 +12,7 @@ from .constants import ApatheticSchema_Internal_Constants
 from .types import (
     ApatheticSchema_Internal_Types,
     ApatheticSchema_SchemaErrorAggregator,
+    ApatheticSchema_SchErrAggEntry,
 )
 
 
@@ -37,7 +38,7 @@ class ApatheticSchema_Internal_WarnKeysOnce:  # noqa: N801  # pyright: ignore[re
         *,
         strict_config: bool,
         summary: ApatheticSchema_Internal_Types.ValidationSummary,  # modified in-place
-        agg: ApatheticSchema_Internal_Types.SchemaErrorAggregator | None,  # type: ignore[valid-type]
+        agg: ApatheticSchema_SchemaErrorAggregator | None,
     ) -> tuple[bool, set[str]]:
         """Warn once for known bad keys (e.g. dry-run, root-only).
 
@@ -77,11 +78,11 @@ class ApatheticSchema_Internal_WarnKeysOnce:  # noqa: N801  # pyright: ignore[re
             )
 
             bucket = cast_hint(
-                dict[str, ApatheticSchema_Internal_Types.SchErrAggEntry],  # type: ignore[valid-type]
+                dict[str, ApatheticSchema_SchErrAggEntry],
                 agg.setdefault(severity, {}),
             )
 
-            default_entry: ApatheticSchema_Internal_Types.SchErrAggEntry = {  # type: ignore[valid-type]
+            default_entry: ApatheticSchema_SchErrAggEntry = {
                 "msg": msg,
                 "contexts": [],
             }
