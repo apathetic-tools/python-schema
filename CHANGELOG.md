@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.1.2 (2025-12-06)
+
+### Bug Fixes
+
+- **types**: Move ValidationSummary outside mixin and rename with ApatheticSchema_ prefix
+  ([`46209b4`](https://github.com/apathetic-tools/python-schema/commit/46209b4ef51a22b695c6dfc3b0bda5d71546a70a))
+
+
 ## v0.1.1 (2025-12-06)
 
 ### Bug Fixes
