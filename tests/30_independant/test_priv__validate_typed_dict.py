@@ -5,15 +5,23 @@
 # ruff: noqa: SLF001
 # pyright: reportPrivateUsage=false
 
+from __future__ import annotations
+
+import sys
 from typing import Any, TypedDict
 
 import pytest
 
 import apathetic_schema as amod_schema
-from apathetic_schema.validate_typed_dict import (
-    ApatheticSchema_Internal_ValidateTypedDict,
-)
 from tests.utils import make_summary
+
+
+# Access submodule via sys.modules (runtime_swap handles the swap transparently)
+# Note: Can't use `import apathetic_schema.validate_typed_dict` because
+# __init__.py exports it as a function, not the module
+ApatheticSchema_Internal_ValidateTypedDict = sys.modules[
+    "apathetic_schema.validate_typed_dict"
+].ApatheticSchema_Internal_ValidateTypedDict
 
 
 # ---------------------------------------------------------------------------
@@ -61,7 +69,7 @@ def test_validate_typed_dict_rejects_non_dict() -> None:
 
     # --- verify ---
     assert ok is False
-    assert any("expected an object" in m for m in summary.errors)
+    assert any("expected an object" in m for m in summary.errors)  # type: ignore[attr-defined]
 
 
 def test_validate_typed_dict_detects_unknown_keys() -> None:
@@ -82,7 +90,7 @@ def test_validate_typed_dict_detects_unknown_keys() -> None:
     # --- verify ---
     assert ok is False
     # unknown keys appear as warnings (or strict_warnings if strict=True)
-    pool = summary.warnings + summary.strict_warnings + summary.errors
+    pool = summary.warnings + summary.strict_warnings + summary.errors  # type: ignore[attr-defined]
     assert any("unknown key" in m.lower() for m in pool)
 
 
@@ -117,7 +125,7 @@ def test_validate_typed_dict_nested_recursion() -> None:
     bad: Outer = {"inner": {"include": [123], "out": "dist"}}  # type: ignore[list-item]
 
     # --- patch, execute and verify ---
-    summary1 = amod_schema.ApatheticSchema_ValidationSummary(True, [], [], [], True)
+    summary1 = amod_schema.ValidationSummary(True, [], [], [], True)
     assert ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
         "root",
         good,
@@ -128,7 +136,7 @@ def test_validate_typed_dict_nested_recursion() -> None:
         field_path="root",
     )
 
-    summary2 = amod_schema.ApatheticSchema_ValidationSummary(True, [], [], [], True)
+    summary2 = amod_schema.ValidationSummary(True, [], [], [], True)
     assert not ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
         "root",
         bad,
@@ -161,7 +169,7 @@ def test_validate_typed_dict_respects_prewarn() -> None:
 
     # --- verify ---
     assert ok is True
-    pool = summary.errors + summary.strict_warnings + summary.warnings
+    pool = summary.errors + summary.strict_warnings + summary.warnings  # type: ignore[attr-defined]
     assert not any("dry_run" in m and "unknown key" in m for m in pool)
 
 
@@ -278,7 +286,7 @@ def test_validate_typed_dict_example_message_formatting() -> None:
     # --- verify ---
     assert ok is False
     # Error message should include example
-    error_msgs = " ".join(summary.errors)
+    error_msgs = " ".join(summary.errors)  # type: ignore[attr-defined]
     assert "e.g." in error_msgs or "30" in error_msgs
 
 
@@ -307,7 +315,7 @@ def test_validate_typed_dict_unknown_keys_with_hints() -> None:
     assert ok is False
     # Note: get_close_matches might not always find a match depending on cutoff
     # So we just check that unknown key error is present
-    pool = summary.warnings + summary.strict_warnings + summary.errors
+    pool = summary.warnings + summary.strict_warnings + summary.errors  # type: ignore[attr-defined]
     assert any("unknown key" in m.lower() or "outpt" in m.lower() for m in pool)
 
 
@@ -334,28 +342,31 @@ def test_validate_typed_dict_unknown_keys_location_handling() -> None:
     # --- verify ---
     assert ok is False
     # Location should be processed correctly
-    pool = summary.warnings + summary.strict_warnings + summary.errors
+    pool = summary.warnings + summary.strict_warnings + summary.errors  # type: ignore[attr-defined]
     # Should mention unknown key
     assert any("unknown" in m.lower() for m in pool)
 
 
+# TypedDict classes for test_validate_typed_dict_nested_location_handling
+# Defined at module level so get_type_hints() can resolve forward references
+class _TestNestedLocation_Inner(TypedDict):  # noqa: N801
+    value: str
+
+
+class _TestNestedLocation_Outer(TypedDict):  # noqa: N801
+    inner: _TestNestedLocation_Inner
+
+
 def test_validate_typed_dict_nested_location_handling() -> None:
     """Nested TypedDict validation should handle location correctly."""
-
     # --- setup ---
-    class Inner(TypedDict):
-        value: str
-
-    class Outer(TypedDict):
-        inner: Inner
-
     summary = make_summary()
 
     # --- execute ---
     ok = ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
         context="in top-level configuration.",
         val={"inner": {"value": "ok"}},
-        typedict_cls=Outer,
+        typedict_cls=_TestNestedLocation_Outer,
         strict=True,
         summary=summary,
         prewarn=set(),

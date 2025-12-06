@@ -20,7 +20,7 @@ from .constants import ApatheticSchema_Internal_Constants
 
 
 if TYPE_CHECKING:
-    from .types import ApatheticSchema_ValidationSummary
+    from .types import ApatheticSchema_Internal_Types
 
 
 class ApatheticSchema_Internal_ValidateTypedDict:  # noqa: N801  # pyright: ignore[reportUnusedClass]
@@ -95,7 +95,7 @@ class ApatheticSchema_Internal_ValidateTypedDict:  # noqa: N801  # pyright: igno
         expected_type: Any,
         *,
         strict: bool,
-        summary: ApatheticSchema_ValidationSummary,  # modified in-place
+        summary: ApatheticSchema_Internal_Types.ValidationSummary,  # modified in-place
         field_path: str,
         field_examples: dict[str, str] | None = None,
     ) -> bool:
@@ -140,7 +140,7 @@ class ApatheticSchema_Internal_ValidateTypedDict:  # noqa: N801  # pyright: igno
         subtype: Any,
         *,
         strict: bool,
-        summary: ApatheticSchema_ValidationSummary,  # modified in-place
+        summary: ApatheticSchema_Internal_Types.ValidationSummary,  # modified in-place
         prewarn: set[str],
         field_path: str,
         field_examples: dict[str, str] | None = None,
@@ -231,7 +231,7 @@ class ApatheticSchema_Internal_ValidateTypedDict:  # noqa: N801  # pyright: igno
         schema: dict[str, Any],
         *,
         strict: bool,
-        summary: ApatheticSchema_ValidationSummary,  # modified in-place
+        summary: ApatheticSchema_Internal_Types.ValidationSummary,  # modified in-place
         prewarn: set[str],
     ) -> bool:
         """Check for unknown keys in a dictionary value."""
@@ -277,7 +277,7 @@ class ApatheticSchema_Internal_ValidateTypedDict:  # noqa: N801  # pyright: igno
         schema: dict[str, Any],
         *,
         strict: bool,
-        summary: ApatheticSchema_ValidationSummary,  # modified in-place
+        summary: ApatheticSchema_Internal_Types.ValidationSummary,  # modified in-place
         prewarn: set[str],
         ignore_keys: set[str],
         field_path: str,
@@ -373,7 +373,7 @@ class ApatheticSchema_Internal_ValidateTypedDict:  # noqa: N801  # pyright: igno
         typedict_cls: type[Any],
         *,
         strict: bool,
-        summary: ApatheticSchema_ValidationSummary,  # modified in-place
+        summary: ApatheticSchema_Internal_Types.ValidationSummary,  # modified in-place
         prewarn: set[str],
         ignore_keys: set[str] | None = None,
         field_path: str = "",

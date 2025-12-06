@@ -1,14 +1,13 @@
 # tests/0_independant/test_warn_keys_once.py
 """Tests for warn_keys_once function."""
 
-from typing import TYPE_CHECKING
+from __future__ import annotations
+
+from typing import cast
 
 import apathetic_schema as amod_schema
 from tests.utils import make_summary
 
-
-if TYPE_CHECKING:
-    from apathetic_schema.warn_keys_once import ApatheticSchema_SchemaErrorAggregator
 
 # Get the namespace class
 apathetic_schema = amod_schema.apathetic_schema
@@ -36,16 +35,16 @@ def test_warn_keys_once_no_bad_keys() -> None:
     # --- verify ---
     assert valid is True
     assert found == set()
-    assert not summary.warnings
-    assert not summary.strict_warnings
-    assert not summary.errors
+    assert not summary.warnings  # type: ignore[attr-defined]
+    assert not summary.strict_warnings  # type: ignore[attr-defined]
+    assert not summary.errors  # type: ignore[attr-defined]
 
 
 def test_warn_keys_once_with_aggregator_non_strict() -> None:
     """When agg is provided and strict=False, should aggregate warnings."""
     # --- setup ---
     summary = make_summary(strict=False)
-    agg: ApatheticSchema_SchemaErrorAggregator = {}
+    agg: amod_schema.SchemaErrorAggregator = {}
     cfg = {"dry_run": True, "valid": "value"}
     bad_keys = {"dry_run"}
 
@@ -66,20 +65,20 @@ def test_warn_keys_once_with_aggregator_non_strict() -> None:
     assert found == {"dry_run"}
     assert "warnings" in agg
     assert "dry-run" in agg["warnings"]
-    entry = agg["warnings"]["dry-run"]
+    entry = cast("amod_schema.SchErrAggEntry", agg["warnings"]["dry-run"])
     expected_msg = "The 'dry-run' key is deprecated {ctx}"
-    assert entry["msg"] == expected_msg  # type: ignore[comparison-overlap]
+    assert entry["msg"] == expected_msg
     assert "in top-level configuration" in entry["contexts"]
     # Summary should not be modified when using aggregator
-    assert not summary.warnings
-    assert not summary.strict_warnings
+    assert not summary.warnings  # type: ignore[attr-defined]
+    assert not summary.strict_warnings  # type: ignore[attr-defined]
 
 
 def test_warn_keys_once_with_aggregator_strict() -> None:
     """When agg is provided and strict=True, should aggregate strict warnings."""
     # --- setup ---
     summary = make_summary(strict=True)
-    agg: ApatheticSchema_SchemaErrorAggregator = {}
+    agg: amod_schema.SchemaErrorAggregator = {}
     cfg = {"dry_run": True}
     bad_keys = {"dry_run"}
 
@@ -100,9 +99,9 @@ def test_warn_keys_once_with_aggregator_strict() -> None:
     assert found == {"dry_run"}
     assert "strict_warnings" in agg
     assert "dry-run" in agg["strict_warnings"]
-    entry = agg["strict_warnings"]["dry-run"]
+    entry = cast("amod_schema.SchErrAggEntry", agg["strict_warnings"]["dry-run"])
     expected_msg = "Deprecated key {keys} {ctx}"
-    assert entry["msg"] == expected_msg  # type: ignore[comparison-overlap]
+    assert entry["msg"] == expected_msg
     assert "in config" in entry["contexts"]
 
 
@@ -110,7 +109,7 @@ def test_warn_keys_once_with_aggregator_multiple_contexts() -> None:
     """Aggregator should collect multiple contexts for the same tag."""
     # --- setup ---
     summary = make_summary()
-    agg: ApatheticSchema_SchemaErrorAggregator = {}
+    agg: amod_schema.SchemaErrorAggregator = {}
     bad_keys = {"dry_run"}
 
     # --- execute ---
@@ -139,7 +138,7 @@ def test_warn_keys_once_with_aggregator_multiple_contexts() -> None:
     )
 
     # --- verify ---
-    entry = agg["warnings"]["dry-run"]
+    entry = cast("amod_schema.SchErrAggEntry", agg["warnings"]["dry-run"])
     expected_context_count = 2
     assert len(entry["contexts"]) == expected_context_count
     assert "context1" in entry["contexts"]
@@ -168,11 +167,11 @@ def test_warn_keys_once_without_aggregator_non_strict() -> None:
     # --- verify ---
     assert valid is True
     assert found == {"dry_run"}
-    assert len(summary.warnings) == 1
-    assert "dry_run" in summary.warnings[0]
-    assert "in config" in summary.warnings[0]
-    assert not summary.strict_warnings
-    assert not summary.errors
+    assert len(summary.warnings) == 1  # type: ignore[attr-defined]
+    assert "dry_run" in summary.warnings[0]  # type: ignore[attr-defined]
+    assert "in config" in summary.warnings[0]  # type: ignore[attr-defined]
+    assert not summary.strict_warnings  # type: ignore[attr-defined]
+    assert not summary.errors  # type: ignore[attr-defined]
 
 
 def test_warn_keys_once_without_aggregator_strict() -> None:
@@ -197,11 +196,11 @@ def test_warn_keys_once_without_aggregator_strict() -> None:
     # --- verify ---
     assert valid is False  # strict mode
     assert found == {"dry_run"}
-    assert len(summary.strict_warnings) == 1
-    assert "dry_run" in summary.strict_warnings[0]
-    assert "in config" in summary.strict_warnings[0]
-    assert not summary.warnings
-    assert not summary.errors
+    assert len(summary.strict_warnings) == 1  # type: ignore[attr-defined]
+    assert "dry_run" in summary.strict_warnings[0]  # type: ignore[attr-defined]
+    assert "in config" in summary.strict_warnings[0]  # type: ignore[attr-defined]
+    assert not summary.warnings  # type: ignore[attr-defined]
+    assert not summary.errors  # type: ignore[attr-defined]
 
 
 def test_warn_keys_once_case_insensitive_matching() -> None:
@@ -227,8 +226,8 @@ def test_warn_keys_once_case_insensitive_matching() -> None:
     # --- verify ---
     # Should find match case-insensitively and preserve original case from cfg
     assert found == {"DRY_RUN"}  # Original case from cfg preserved
-    assert len(summary.warnings) == 1
-    msg = summary.warnings[0]
+    assert len(summary.warnings) == 1  # type: ignore[attr-defined]
+    msg = summary.warnings[0]  # type: ignore[attr-defined]
     assert "DRY_RUN" in msg  # Original case should appear in message
 
 
@@ -253,8 +252,8 @@ def test_warn_keys_once_multiple_bad_keys() -> None:
 
     # --- verify ---
     assert found == {"dry_run", "deprecated"}
-    assert len(summary.warnings) == 1
-    msg = summary.warnings[0]
+    assert len(summary.warnings) == 1  # type: ignore[attr-defined]
+    msg = summary.warnings[0]  # type: ignore[attr-defined]
     # Keys should be sorted in message
     assert "dry_run" in msg or "deprecated" in msg
 
@@ -279,8 +278,8 @@ def test_warn_keys_once_message_formatting() -> None:
     )
 
     # --- verify ---
-    assert len(summary.warnings) == 1
-    msg = summary.warnings[0]
+    assert len(summary.warnings) == 1  # type: ignore[attr-defined]
+    msg = summary.warnings[0]  # type: ignore[attr-defined]
     assert "bad" in msg
     assert "in my config" in msg
     # Should be formatted, not contain literal {keys} or {ctx}

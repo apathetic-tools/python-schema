@@ -5,16 +5,24 @@
 # ruff: noqa: SLF001
 # pyright: reportPrivateUsage=false
 
-from typing import Any
+from __future__ import annotations
+
+import sys
+from typing import TYPE_CHECKING, Any
 
 import apathetic_utils as mod_utils
-import pytest
 
-from apathetic_schema.validate_typed_dict import (
-    ApatheticSchema_Internal_ValidateTypedDict,
-)
 from tests.utils import PROGRAM_PACKAGE, make_summary
 from tests.utils.constants import PATCH_STITCH_HINTS
+
+
+if TYPE_CHECKING:
+    import pytest
+
+# Access submodule via sys.modules (runtime_swap handles the swap transparently)
+ApatheticSchema_Internal_ValidateTypedDict = sys.modules[
+    "apathetic_schema.validate_typed_dict"
+].ApatheticSchema_Internal_ValidateTypedDict
 
 
 def test_validate_scalar_value_returns_bool() -> None:
@@ -50,9 +58,9 @@ def test_validate_scalar_value_accepts_correct_type() -> None:
 
     # --- verify ---
     assert ok is True
-    assert not summary.errors
-    assert not summary.warnings
-    assert not summary.strict_warnings
+    assert not summary.errors  # type: ignore[attr-defined]
+    assert not summary.warnings  # type: ignore[attr-defined]
+    assert not summary.strict_warnings  # type: ignore[attr-defined]
 
 
 def test_validate_scalar_value_rejects_wrong_type() -> None:
@@ -72,7 +80,7 @@ def test_validate_scalar_value_rejects_wrong_type() -> None:
 
     # --- verify ---
     assert ok is False
-    assert any("expected int" in m for m in summary.errors)
+    assert any("expected int" in m for m in summary.errors)  # type: ignore[attr-defined]
 
 
 def test_validate_scalar_value_handles_fallback_path(
@@ -91,7 +99,7 @@ def test_validate_scalar_value_handles_fallback_path(
         mod_utils,
         "safe_isinstance",
         _fake_safe_isinstance,
-        PROGRAM_PACKAGE,
+        package_prefix=PROGRAM_PACKAGE,
         stitch_hints=PATCH_STITCH_HINTS,
     )
     ok = ApatheticSchema_Internal_ValidateTypedDict._validate_scalar_value(

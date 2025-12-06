@@ -3,30 +3,20 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import Any
 
 from apathetic_utils import cast_hint
 
 from .collect_msg import ApatheticSchema_Internal_CollectMsg
 from .constants import ApatheticSchema_Internal_Constants
+from .types import (
+    ApatheticSchema_Internal_Types,
+    ApatheticSchema_SchemaErrorAggregator,
+)
 
 
-if TYPE_CHECKING:
-    from .types import ApatheticSchema_ValidationSummary
-
-
-class ApatheticSchema_SchErrAggEntry(TypedDict):  # noqa: N801
-    """Internal type for schema error aggregator entries."""
-
-    msg: str
-    contexts: list[str]
-
-
-# Define SchemaErrorAggregator here since it uses ApatheticSchema_SchErrAggEntry
-# This avoids circular imports with types.py
-ApatheticSchema_SchemaErrorAggregator = dict[
-    str, dict[str, dict[str, ApatheticSchema_SchErrAggEntry]]
-]
+# Re-export for external packages (e.g., serger) that import from this module
+__all__ = ["ApatheticSchema_SchemaErrorAggregator"]
 
 
 class ApatheticSchema_Internal_WarnKeysOnce:  # noqa: N801  # pyright: ignore[reportUnusedClass]
@@ -46,8 +36,8 @@ class ApatheticSchema_Internal_WarnKeysOnce:  # noqa: N801  # pyright: ignore[re
         msg: str,
         *,
         strict_config: bool,
-        summary: ApatheticSchema_ValidationSummary,  # modified in-place
-        agg: ApatheticSchema_SchemaErrorAggregator | None,
+        summary: ApatheticSchema_Internal_Types.ValidationSummary,  # modified in-place
+        agg: ApatheticSchema_Internal_Types.SchemaErrorAggregator | None,  # type: ignore[valid-type]
     ) -> tuple[bool, set[str]]:
         """Warn once for known bad keys (e.g. dry-run, root-only).
 
@@ -87,10 +77,14 @@ class ApatheticSchema_Internal_WarnKeysOnce:  # noqa: N801  # pyright: ignore[re
             )
 
             bucket = cast_hint(
-                dict[str, ApatheticSchema_SchErrAggEntry], agg.setdefault(severity, {})
+                dict[str, ApatheticSchema_Internal_Types.SchErrAggEntry],  # type: ignore[valid-type]
+                agg.setdefault(severity, {}),
             )
 
-            default_entry: ApatheticSchema_SchErrAggEntry = {"msg": msg, "contexts": []}
+            default_entry: ApatheticSchema_Internal_Types.SchErrAggEntry = {  # type: ignore[valid-type]
+                "msg": msg,
+                "contexts": [],
+            }
             entry = bucket.setdefault(tag, default_entry)
             entry["contexts"].append(context)
         else:

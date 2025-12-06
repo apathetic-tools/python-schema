@@ -61,6 +61,7 @@ Why these rules matter:
     suites
   - Tool compatibility: Ensures linters and type checkers don't flag
     intentional private access
+
 """
 
 import ast
@@ -130,13 +131,15 @@ def _find_private_function_calls(tree: ast.AST, lines: list[str]) -> set[str]:
 
 
 def _check_filename_matches(
-    test_file: Path, functions_without_inline_ignore: set[str]
+    test_file: Path,
+    functions_without_inline_ignore: set[str],
 ) -> tuple[bool, str, str] | None:
     """Check if filename matches any private function without inline ignore.
 
     Returns:
         None if filename matches (case-insensitive),
         or (False, func_name, expected_name) if not.
+
     """
     actual_name = test_file.name.lower()  # Case-insensitive comparison
     for func_name in functions_without_inline_ignore:
@@ -155,6 +158,7 @@ def _process_test_file(test_file: Path) -> tuple[Path, str, str] | None:
 
     Returns:
         None if no violation, or (file, func_name, expected_name) if violation.
+
     """
     # Read file content
     try:
@@ -214,6 +218,7 @@ def test_private_function_naming_convention() -> None:
       called as a helper while testing public APIs), use inline ignore comments
       on those specific calls instead of top-level ignores and this naming
       convention.
+
     """
     tests_dir = Path(__file__).parent.parent
     violations: list[tuple[Path, str, str]] = []
@@ -238,12 +243,12 @@ def test_private_function_naming_convention() -> None:
     if violations:
         print(
             "\n❌ Test files that are primarily test suites for private functions"
-            " must follow naming convention:"
+            " must follow naming convention:",
         )
         print(
             "\nRule: Test files that are PRIMARILY test suites for a private"
             " function and have top-level ignore comments must be named:"
-            "\n  `test_priv__<function name without leading underscore>.py`"
+            "\n  `test_priv__<function name without leading underscore>.py`",
         )
         print(
             "\nExamples:"
@@ -252,7 +257,7 @@ def test_private_function_naming_convention() -> None:
             "\n  ✅ Test suite primarily for `_strip_jsonc_comments` →"
             "\n    `test_priv__strip_jsonc_comments.py`"
             "\n  ❌ Test suite primarily for `_private_func` in `test_utils.py` →"
-            "\n    Should rename to `test_priv__private_func.py`"
+            "\n    Should rename to `test_priv__private_func.py`",
         )
         print(
             "\nWhen to use inline ignores instead:"
@@ -261,7 +266,7 @@ def test_private_function_naming_convention() -> None:
             " inline ignore comments on those specific calls instead:"
             "\n    mod_utils._private_helper()  "
             "\n  This avoids needing top-level ignore comments and the"
-            " `test_priv__*.py` naming convention."
+            " `test_priv__*.py` naming convention.",
         )
         print("\nViolations found:")
         for test_file, func_name, expected_name in violations:
@@ -277,7 +282,7 @@ def test_private_function_naming_convention() -> None:
                 f" test):"
                 f"\n         Add inline ignore comments to `{func_name}` calls:"
                 f"\n         mod_utils.{func_name}()  "
-                f"\n         And remove top-level ignore comments from this file."
+                f"\n         And remove top-level ignore comments from this file.",
             )
         xmsg = (
             f"{len(violations)} test file(s) violate private function naming"
@@ -370,12 +375,12 @@ def test_priv_files_have_ignore_comments() -> None:
     if violations:
         print(
             "\n❌ Test files named `test_priv__*.py` must have required ignore"
-            " comments:"
+            " comments:",
         )
         print(
             "\nAll test files that are primarily test suites for private functions"
             " MUST include these comments at the top of the file (within the first"
-            " 50 lines):"
+            " 50 lines):",
         )
         print()
         for i, comment in enumerate(required_comments, 1):
@@ -387,14 +392,14 @@ def test_priv_files_have_ignore_comments() -> None:
             "\n  - Testing private functions is intentional and must be"
             " documented"
             "\n  - Without these comments, CI will fail due to linter/type"
-            " checker errors"
+            " checker errors",
         )
         print(
             "\nNote: These rules apply ONLY to test files that are primarily test"
             " suites for a private function. If your test file calls a private"
             " function as a helper but is primarily testing something else, use"
             " inline ignore comments instead:"
-            "\n    mod_utils._private_helper()  "
+            "\n    mod_utils._private_helper()  ",
         )
         print("\nViolations found:")
         for test_file in violations:
@@ -413,12 +418,12 @@ def test_priv_files_have_ignore_comments() -> None:
                         print(f"      - {comment}")
                     print(
                         "    Fix: Add the missing comments at the top of the file"
-                        " (within the first 50 lines)"
+                        " (within the first 50 lines)",
                     )
                 else:
                     print(
                         "    Note: Comments may be present but in wrong case or"
-                        " location"
+                        " location",
                     )
             except (UnicodeDecodeError, OSError):
                 print("    (Could not read file to check specific missing comments)")

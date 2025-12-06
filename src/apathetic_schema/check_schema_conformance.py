@@ -9,7 +9,7 @@ from .validate_typed_dict import ApatheticSchema_Internal_ValidateTypedDict
 
 
 if TYPE_CHECKING:
-    from .types import ApatheticSchema_ValidationSummary
+    from .types import ApatheticSchema_Internal_Types
 
 
 class ApatheticSchema_Internal_CheckSchemaConformance:  # noqa: N801  # pyright: ignore[reportUnusedClass]
@@ -27,7 +27,7 @@ class ApatheticSchema_Internal_CheckSchemaConformance:  # noqa: N801  # pyright:
         context: str,
         *,
         strict_config: bool,
-        summary: ApatheticSchema_ValidationSummary,  # modified in-place
+        summary: ApatheticSchema_Internal_Types.ValidationSummary,  # modified in-place
         prewarn: set[str] | None = None,
         ignore_keys: set[str] | None = None,
         base_path: str = "root",

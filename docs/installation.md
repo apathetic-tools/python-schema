@@ -29,9 +29,9 @@ This installation method provides:
 - Version pinning
 - Integration with your existing Python project structure
 
-## Alternative: Single-File Distribution
+## Alternative: Stitched Distribution
 
-For projects that prefer a single-file dependency, we also distribute a standalone `apathetic_schema.py` file that you can download directly from [releases](https://github.com/apathetic-tools/python-schema/releases).
+For projects that prefer a stitched dependency, we also distribute a stitched `apathetic_schema.py` file that you can download directly from [releases](https://github.com/apathetic-tools/python-schema/releases).
 
 ### Download and Use
 

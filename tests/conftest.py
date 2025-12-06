@@ -3,10 +3,10 @@
 
 Each pytest run now targets a single runtime mode:
 - Normal mode (default): uses src/apathetic_schema
-- Standalone mode: uses dist/apathetic_schema.py when RUNTIME_MODE=singlefile
+- Stitched mode: uses dist/apathetic_schema.py when RUNTIME_MODE=stitched
 - Zipapp mode: uses dist/apathetic_schema.pyz when RUNTIME_MODE=zipapp
 
-Switch mode with: RUNTIME_MODE=singlefile pytest or RUNTIME_MODE=zipapp pytest
+Switch mode with: RUNTIME_MODE=stitched pytest or RUNTIME_MODE=zipapp pytest
 """
 
 import logging
@@ -26,23 +26,36 @@ from tests.utils.constants import (
 
 
 # early jank hook - must run before importing apathetic_logging
-# so we get the stitched version if in singlefile/zipapp mode
+# so we get the stitched version if in stitched/zipapp mode
 apathetic_utils.runtime_swap(
-    PROJ_ROOT,
-    PROGRAM_PACKAGE,
-    PROGRAM_SCRIPT,
-    BUNDLER_SCRIPT,
+    root=PROJ_ROOT,
+    package_name=PROGRAM_PACKAGE,
+    script_name=PROGRAM_SCRIPT,
+    bundler_script=BUNDLER_SCRIPT,
 )
+
+# Workaround: serger is being updated to set __STITCHED__, but currently sets
+# __STANDALONE__ instead. Set __STITCHED__ based on __STANDALONE__ so
+# detect_runtime_mode() works correctly.
+if (
+    PROGRAM_PACKAGE in sys.modules
+    and hasattr(sys.modules[PROGRAM_PACKAGE], "__STANDALONE__")
+    and sys.modules[PROGRAM_PACKAGE].__STANDALONE__
+    and not hasattr(sys.modules[PROGRAM_PACKAGE], "__STITCHED__")
+):
+    sys.modules[PROGRAM_PACKAGE].__STITCHED__ = True  # type: ignore[attr-defined]
 
 # Import apathetic_logging AFTER runtime_swap so we get the correct version
 # In stitched builds, apathetic_logging is registered in sys.modules
-# by the stitched file. In installed mode, we import it normally.
+# by the stitched file. In package mode, we import it normally.
 if "apathetic_logging" in sys.modules:
-    # Use the version from sys.modules (could be stitched or installed)
+    # Use the version from sys.modules (could be stitched or package)
     import apathetic_logging as mod_logging
 
     mod_logging_source = getattr(
-        sys.modules["apathetic_logging"], "__file__", "unknown"
+        sys.modules["apathetic_logging"],
+        "__file__",
+        "unknown",
     )
     was_in_sys_modules = True
 else:
@@ -57,11 +70,11 @@ safe_trace = mod_logging.makeSafeTrace("⚡️")
 # Debug: show which apathetic_logging module we're using
 if was_in_sys_modules:
     safe_trace(
-        f"🔍 conftest: Using apathetic_logging from sys.modules: {mod_logging_source}"
+        f"🔍 conftest: Using apathetic_logging from sys.modules: {mod_logging_source}",
     )
 else:
     safe_trace(
-        f"🔍 conftest: Imported apathetic_logging normally: {mod_logging_source}"
+        f"🔍 conftest: Imported apathetic_logging normally: {mod_logging_source}",
     )
 
 # Register a logger name so getLogger() returns a named logger (not root)
@@ -69,7 +82,7 @@ else:
 mod_logging.registerLogger(PROGRAM_PACKAGE)
 safe_trace(
     f"🔍 conftest: Registered logger '{PROGRAM_PACKAGE}' "
-    f"using apathetic_logging from: {mod_logging_source}"
+    f"using apathetic_logging from: {mod_logging_source}",
 )
 
 
@@ -110,7 +123,7 @@ def reset_logger_class() -> Generator[None, None, None]:
 
 
 def _mode() -> str:
-    return os.getenv("RUNTIME_MODE", "installed")
+    return os.getenv("RUNTIME_MODE", "package")
 
 
 def _filter_debug_tests(
@@ -217,7 +230,7 @@ def pytest_collection_modifyitems(
 def pytest_unconfigure(config: pytest.Config) -> None:
     """Print summary of included runtime-specific tests at the end."""
     included_map: dict[str, int] = getattr(config, "_included_map", {})
-    mode = getattr(config, "_runtime_mode", "installed")
+    mode = getattr(config, "_runtime_mode", "package")
 
     if not included_map:
         return

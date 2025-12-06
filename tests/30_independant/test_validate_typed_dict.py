@@ -1,12 +1,11 @@
 # tests/0_independant/test_validate_typed_dict.py
 """Tests for validate_typed_dict function."""
 
+from __future__ import annotations
+
 from typing import Any, TypedDict
 
-from apathetic_schema.types import ApatheticSchema_ValidationSummary
-from apathetic_schema.validate_typed_dict import (
-    ApatheticSchema_Internal_ValidateTypedDict,
-)
+import apathetic_schema as amod_schema
 from tests.utils import make_summary
 
 
@@ -24,7 +23,7 @@ class MiniBuild(TypedDict):
 
 def test_validate_typed_dict_accepts_dict() -> None:
     # --- execute ---
-    result = ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
+    result = amod_schema.validate_typed_dict(
         context="root",
         val={"include": ["src"], "out": "dist"},
         typedict_cls=MiniBuild,
@@ -43,7 +42,7 @@ def test_validate_typed_dict_rejects_non_dict() -> None:
     summary = make_summary()
 
     # --- patch and execute ---
-    ok = ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
+    ok = amod_schema.validate_typed_dict(
         "root",
         "notadict",
         MiniBuild,
@@ -55,7 +54,7 @@ def test_validate_typed_dict_rejects_non_dict() -> None:
 
     # --- verify ---
     assert ok is False
-    assert any("expected an object" in m for m in summary.errors)
+    assert any("expected an object" in m for m in summary.errors)  # type: ignore[attr-defined]
 
 
 def test_validate_typed_dict_detects_unknown_keys() -> None:
@@ -63,7 +62,7 @@ def test_validate_typed_dict_detects_unknown_keys() -> None:
     summary = make_summary()
 
     # --- patch and execute ---
-    ok = ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
+    ok = amod_schema.validate_typed_dict(
         "root",
         {"include": ["x"], "out": "y", "weird": 1},
         MiniBuild,
@@ -76,7 +75,7 @@ def test_validate_typed_dict_detects_unknown_keys() -> None:
     # --- verify ---
     assert ok is False
     # unknown keys appear as warnings (or strict_warnings if strict=True)
-    pool = summary.warnings + summary.strict_warnings + summary.errors
+    pool = summary.warnings + summary.strict_warnings + summary.errors  # type: ignore[attr-defined]
     assert any("unknown key" in m.lower() for m in pool)
 
 
@@ -86,7 +85,7 @@ def test_validate_typed_dict_allows_missing_field() -> None:
     val = {"out": "dist"}  # 'include' missing
 
     # --- execute ---
-    ok = ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
+    ok = amod_schema.validate_typed_dict(
         "ctx",
         val,
         MiniBuild,
@@ -111,8 +110,8 @@ def test_validate_typed_dict_nested_recursion() -> None:
     bad: Outer = {"inner": {"include": [123], "out": "dist"}}  # type: ignore[list-item]
 
     # --- patch, execute and verify ---
-    summary1 = ApatheticSchema_ValidationSummary(True, [], [], [], True)
-    assert ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
+    summary1 = amod_schema.ValidationSummary(True, [], [], [], True)
+    assert amod_schema.validate_typed_dict(
         "root",
         good,
         Outer,
@@ -122,8 +121,8 @@ def test_validate_typed_dict_nested_recursion() -> None:
         field_path="root",
     )
 
-    summary2 = ApatheticSchema_ValidationSummary(True, [], [], [], True)
-    assert not ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
+    summary2 = amod_schema.ValidationSummary(True, [], [], [], True)
+    assert not amod_schema.validate_typed_dict(
         "root",
         bad,
         Outer,
@@ -132,7 +131,8 @@ def test_validate_typed_dict_nested_recursion() -> None:
         prewarn=set(),
         field_path="root",
     )
-    assert summary2.errors  # collected from inner validation
+    # collected from inner validation
+    assert summary2.errors
 
 
 def test_validate_typed_dict_respects_prewarn() -> None:
@@ -143,7 +143,7 @@ def test_validate_typed_dict_respects_prewarn() -> None:
     summary = make_summary()
 
     # --- execute ---
-    ok = ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
+    ok = amod_schema.validate_typed_dict(
         "ctx",
         cfg,
         MiniBuild,
@@ -155,5 +155,5 @@ def test_validate_typed_dict_respects_prewarn() -> None:
 
     # --- verify ---
     assert ok is True
-    pool = summary.errors + summary.strict_warnings + summary.warnings
+    pool = summary.errors + summary.strict_warnings + summary.warnings  # type: ignore[attr-defined]
     assert not any("dry_run" in m and "unknown key" in m for m in pool)

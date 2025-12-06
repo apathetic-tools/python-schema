@@ -1,12 +1,12 @@
 # tests/90_integration/test_embedded_import_semantics.py
 """Integration tests for import semantics in built distributions.
 
-These tests verify that when the project is built using serger or shiv,
+These tests verify that when the project is built using serger or zipbundler,
 the import semantics work correctly:
 - Can import and use the module from built files
 - Exported constants and classes are accessible
 
-Tests serger (single-file .py) builds using the actual project
+Tests serger (stitched .py) builds using the actual project
 configuration and source code.
 
 These are project-specific tests that verify our code works correctly
@@ -35,8 +35,7 @@ def test_serger_build_import_semantics() -> None:
     This verifies our project configuration and code work correctly with serger.
     """
     # --- setup ---
-    # Build the project's single-file script
-    serger_script = PROJ_ROOT / "bin" / "serger.py"
+    # Build the project's stitched script
     config_file = PROJ_ROOT / ".serger.jsonc"
     output_file = PROJ_ROOT / "dist" / f"{PROGRAM_SCRIPT}.py"
 
@@ -47,7 +46,8 @@ def test_serger_build_import_semantics() -> None:
     result = subprocess.run(  # noqa: S603
         [
             sys.executable,
-            str(serger_script),
+            "-m",
+            "serger.__main__",
             "--config",
             str(config_file),
         ],
@@ -61,7 +61,7 @@ def test_serger_build_import_semantics() -> None:
         pytest.fail(
             f"Serger failed with return code {result.returncode}.\n"
             f"stdout: {result.stdout}\n"
-            f"stderr: {result.stderr}"
+            f"stderr: {result.stderr}",
         )
 
     if not output_file.exists():

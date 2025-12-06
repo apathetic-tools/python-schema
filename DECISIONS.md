@@ -107,7 +107,7 @@ The project needed a **canonical distribution format** that works seamlessly wit
 
 Enable **PyPI releases** as the primary distribution method for the package.  
 This provides a **standard, familiar installation path** that integrates with Python's ecosystem — allowing users to install via `pip install apathetic-schema` or add it as a dependency in `pyproject.toml` with version constraints.  
-PyPI releases complement the single-file and zipapp distributions by offering the canonical importable package format that works seamlessly with dependency management tools.
+PyPI releases complement the stitched and zipapp distributions by offering the canonical importable package format that works seamlessly with dependency management tools.
 
 This decision prioritizes **user convenience and ecosystem integration** while maintaining the project's other distribution formats for specialized use cases.
 
@@ -120,7 +120,7 @@ This decision prioritizes **user convenience and ecosystem integration** while m
 
 <br/><br/>
 
-## 📦 Choose `shiv` for Zipapp Support
+## 📦 Choose `zipbundler` for Zipapp Support
 <a id="dec13"></a>*DEC 13 — 2025-11-24*
 
 ### Context
@@ -133,16 +133,18 @@ The project needed a tool that **automatically bundles dependencies** while prod
 
 | Option | Pros | Cons |
 |--------|------|------|
-| **`shiv`** | ✅ Automatic dependency resolution and bundling<br>✅ Handles entry points and console scripts<br>✅ Produces executable `.pyz` files<br>✅ Integrates with `pyproject.toml`<br>✅ Active maintenance and Python 3.10+ support | ⚠️ Additional dependency for build process |
+| **`zipbundler`** | ✅ Automatic dependency resolution and bundling<br>✅ Handles entry points and console scripts<br>✅ Produces executable `.pyz` files<br>✅ Integrates with `pyproject.toml`<br>✅ Active maintenance and Python 3.10+ support<br>✅ Part of the Apathetic Tools ecosystem | ⚠️ Additional dependency for build process |
+| **`shiv`** | ✅ Automatic dependency resolution and bundling<br>✅ Handles entry points and console scripts<br>✅ Produces executable `.pyz` files<br>✅ Integrates with `pyproject.toml`<br>✅ Active maintenance and Python 3.10+ support | ⚠️ External dependency outside the Apathetic Tools ecosystem |
 | **Standard library `zipapp`** | ✅ No external dependencies<br>✅ Built into Python | ❌ Manual dependency management required<br>❌ No automatic entry point handling<br>❌ More complex build scripts needed |
-| **`pex`** | ✅ Similar functionality to shiv<br>✅ Mature tool with good documentation | ⚠️ Slightly more complex configuration<br>⚠️ Less Python-native feel |
+| **`pex`** | ✅ Similar functionality to zipbundler<br>✅ Mature tool with good documentation | ⚠️ Slightly more complex configuration<br>⚠️ Less Python-native feel |
 | **Custom build script** | ✅ Full control over bundling process | ❌ Significant development and maintenance overhead<br>❌ Risk of missing edge cases in dependency resolution |
 
 ### Decision
 
-Choose **`shiv`** for zipapp creation.  
+Choose **`zipbundler`** for zipapp creation.  
 It provides **automatic dependency resolution and bundling** — reading dependencies from `pyproject.toml` and creating a self-contained `.pyz` file that includes all required packages.  
-Shiv's integration with Python packaging standards and its straightforward CLI make it ideal for the project's goal of **minimizing build complexity** while maintaining portability.
+Zipbundler's integration with Python packaging standards and its straightforward CLI make it ideal for the project's goal of **minimizing build complexity** while maintaining portability.  
+As part of the Apathetic Tools ecosystem, it aligns with the project's preference for tools within the same ecosystem when available.
 
 This choice supports the three-tier distribution model by providing a reliable, automated way to produce zipapp distributions without manual dependency management or complex build scripts.
 
@@ -197,7 +199,7 @@ This choice prioritizes **simplicity and zero-maintenance deployment** while pro
 
 ### Context  
 
-Early in development, the project required a **consistent and colorized logging system** that worked seamlessly in both modular and single-file builds.  
+Early in development, the project required a **consistent and colorized logging system** that worked seamlessly in both package and stitched builds.  
 At the time, the built-in Python `logging` module seemed overkill for such a small utility — especially since the tool needed lightweight log-level control and minimal setup.  
 We initially built a **custom logger** to provide:  
 
@@ -205,7 +207,7 @@ We initially built a **custom logger** to provide:
 - Inline color formatting for terminals.  
 - Simpler test injection and patching for trace output.  
 
-This approach fit the project's early ethos of *“small, inspectable, and standalone.”*  
+This approach fit the project's early ethos of *"small, inspectable, and standalone."*  
 
 ### Options Considered  
 
@@ -252,8 +254,8 @@ As the early ad-hoc merger script evolved into a tested module, we want to ensur
 |--------|------|------|------|
 | **PyPI module (default)** | ✅ Easy to maintain and install<br>✅ Supports imports and APIs | ❌ Requires installation and internet | [`poetry`](https://python-poetry.org/), [`pip`](https://pypi.org/project/pip/) |
 | **Single-file script** | ✅ No install step<br>✅ Human-readable source<br>✅ Ideal for quick CLI use | ❌ Not importable<br>❌ Harder to maintain merger logic | [`serger`](https://github.com/apathetic-tools/serger) |
-| **Zipped module (`.pyz`)** | ✅ Bundled, portable archive<br>✅ Maintains import semantics | ⚠️ Requires unzip for source<br>⚠️ Slight startup overhead | [`zipapp`](https://docs.python.org/3/library/zipapp.html), [`shiv`](https://pypi.org/project/shiv/), [`pex`](https://pypi.org/project/pex/) |
-| **Executable bundlers** | ✅ Fully portable binaries<br>✅ No Python install required | ❌ Platform-specific<br>❌ Not source-transparent  | [`PyInstaller`](https://pyinstaller.org/en/stable/), [`shiv`](https://pypi.org/project/shiv/), [`pex`](https://pypi.org/project/pex/) |
+| **Zipped module (`.pyz`)** | ✅ Bundled, portable archive<br>✅ Maintains import semantics | ⚠️ Requires unzip for source<br>⚠️ Slight startup overhead | [`zipapp`](https://docs.python.org/3/library/zipapp.html), [`zipbundler`](../zipbundler), [`pex`](https://pypi.org/project/pex/), [`shiv`](https://github.com/linkedin/shiv) |
+| **Executable bundlers** | ✅ Fully portable binaries<br>✅ No Python install required | ❌ Platform-specific<br>❌ Not source-transparent  | [`PyInstaller`](https://pyinstaller.org/en/stable/), [`pex`](https://pypi.org/project/pex/) |
 
 
 ---

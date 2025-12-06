@@ -359,7 +359,7 @@ If you need to create a release manually (e.g., for hotfixes or special cases):
 > **Note:** For testing, you can use the `testpypi_only` option in the publish workflow to publish to TestPyPI first.
 
 Both distribution files are automatically attached to GitHub releases:
-- `dist/apathetic_schema.py` — single-file script (human-readable, stitched source)
+- `dist/apathetic_schema.py` — stitched script (human-readable, stitched source)
 - `dist/apathetic_schema.pyz` — zipapp format (dependency-aware, importable)
 
 ## Integration with Apathetic Tools
@@ -369,7 +369,7 @@ When contributing, keep in mind that this library is designed to integrate stron
 - **[serger](https://github.com/apathetic-tools/serger)** — the module stitching tool
 - Other Apathetic Tools projects
 
-Changes should maintain compatibility with the broader Apathetic Tools ecosystem and work seamlessly in both modular and single-file distributions.
+Changes should maintain compatibility with the broader Apathetic Tools ecosystem and work seamlessly in both package and stitched distributions.
 
 ## Contribution Rules
 

@@ -6,7 +6,7 @@ when timestamps are disabled. We test both:
 1. Basic tool functionality with sample code (to verify tools work)
 2. Project-specific builds with our actual code (to verify our config/code works)
 
-Tests serger (single-file .py) builds.
+Tests serger (stitched .py) builds.
 """
 
 import json
@@ -50,7 +50,6 @@ def test_serger_build_with_sample_code_is_deterministic(
     }
     config.write_text(json.dumps(config_data, indent=2))
 
-    serger_script = PROJ_ROOT / "bin" / "serger.py"
     monkeypatch.chdir(tmp_path)
 
     # Use temp directories for builds
@@ -62,7 +61,8 @@ def test_serger_build_with_sample_code_is_deterministic(
         result1 = subprocess.run(  # noqa: S603
             [
                 sys.executable,
-                str(serger_script),
+                "-m",
+                "serger.__main__",
                 "--config",
                 str(config),
                 "--out",
@@ -86,7 +86,8 @@ def test_serger_build_with_sample_code_is_deterministic(
             result2 = subprocess.run(  # noqa: S603
                 [
                     sys.executable,
-                    str(serger_script),
+                    "-m",
+                    "serger.__main__",
                     "--config",
                     str(config),
                     "--out",
@@ -125,7 +126,6 @@ def test_serger_build_is_deterministic() -> None:
     3. Verifies both builds produce identical output (with disable_build_timestamp)
     """
     # --- setup ---
-    serger_script = PROJ_ROOT / "bin" / "serger.py"
     config_file = PROJ_ROOT / ".serger.jsonc"
 
     # Use temp directories for builds
@@ -137,7 +137,8 @@ def test_serger_build_is_deterministic() -> None:
         result1 = subprocess.run(  # noqa: S603
             [
                 sys.executable,
-                str(serger_script),
+                "-m",
+                "serger.__main__",
                 "--config",
                 str(config_file),
                 "--disable-build-timestamp",
@@ -162,7 +163,8 @@ def test_serger_build_is_deterministic() -> None:
             result2 = subprocess.run(  # noqa: S603
                 [
                     sys.executable,
-                    str(serger_script),
+                    "-m",
+                    "serger.__main__",
                     "--config",
                     str(config_file),
                     "--disable-build-timestamp",

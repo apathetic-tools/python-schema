@@ -5,13 +5,18 @@
 # ruff: noqa: SLF001
 # pyright: reportPrivateUsage=false
 
+import sys
 from typing import Any, TypedDict
 
 from typing_extensions import NotRequired
 
-from apathetic_schema.validate_typed_dict import (
-    ApatheticSchema_Internal_ValidateTypedDict,
-)
+import apathetic_schema as amod_schema  # pyright: ignore[reportUnusedImport]  # noqa: F401  # Ensures module is loaded
+
+
+# Access submodule via sys.modules (runtime_swap handles the swap transparently)
+ApatheticSchema_Internal_ValidateTypedDict = sys.modules[
+    "apathetic_schema.validate_typed_dict"
+].ApatheticSchema_Internal_ValidateTypedDict
 
 
 # ---------------------------------------------------------------------------
@@ -30,10 +35,10 @@ def test_infer_type_label_basic_types() -> None:
     # --- execute and verify ---
     assert "str" in ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(str)
     assert "list" in ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(
-        list[str]
+        list[str],
     )
     assert "MiniBuild" in ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(
-        MiniBuild
+        MiniBuild,
     )
 
 
@@ -45,14 +50,15 @@ def test_infer_type_label_handles_unusual_types() -> None:
 
     # --- execute, verify ---
     assert "Custom" in ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(
-        Custom
+        Custom,
     )
     assert "Any" in ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(
-        list[Any]
+        list[Any],
     )
     # Should fall back gracefully on unknown types
     assert isinstance(
-        ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(Any), str
+        ApatheticSchema_Internal_ValidateTypedDict._infer_type_label(Any),
+        str,
     )
 
 

@@ -4,39 +4,73 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TypeAlias, TypedDict
 
 
-# --- types ----------------------------------------------------------
-# Import ApatheticSchema_SchemaErrorAggregator from warn_keys_once where it's defined
-# (along with ApatheticSchema_SchErrAggEntry which is only used there)
+# --- TypedDict definitions ---------------------------------------------
 
 
-"""
-severity, tag
+class ApatheticSchema_Internal_SchErrAggEntry(TypedDict):  # noqa: N801
+    """Internal type for schema error aggregator entries."""
 
-Aggregator structure example:
-{
-  "strict_warnings": {
-      "dry-run": {"msg": DRYRUN_MSG, "contexts": ["in build #0", "in build #2"]},
-      ...
-  },
-  "warnings": { ... }
-}
-"""
+    msg: str
+    contexts: list[str]
 
 
-# --- dataclasses ------------------------------------------------------
+# --- Type aliases -------------------------------------------------------
+
+# Type alias for schema error aggregator
+# Structure: dict[severity, dict[tag, dict[key, SchErrAggEntry]]]
+# Example:
+# {
+#   "strict_warnings": {
+#       "dry-run": {"msg": DRYRUN_MSG, "contexts": ["in build #0", "in build #2"]},
+#       ...
+#   },
+#   "warnings": { ... }
+# }
+ApatheticSchema_Internal_SchemaErrorAggregator: TypeAlias = dict[
+    str, dict[str, dict[str, ApatheticSchema_Internal_SchErrAggEntry]]
+]
 
 
-@dataclass
-class ApatheticSchema_ValidationSummary:  # noqa: N801
-    """Validation summary dataclass.
+class ApatheticSchema_Internal_Types:  # noqa: N801  # pyright: ignore[reportUnusedClass]
+    """Mixin class that provides type definitions for Apathetic Schema.
 
-    Tracks validation results including errors, warnings, and strict warnings.
+    This class contains type aliases and dataclasses used throughout the
+    apathetic_schema namespace. When mixed into apathetic_schema, it provides
+    access to these types via the namespace class.
     """
 
-    valid: bool
-    errors: list[str]
-    strict_warnings: list[str]
-    warnings: list[str]
-    strict: bool  # strictness somewhere in our config?
+    # --- TypedDict definitions ---------------------------------------------
+
+    # Reference to module-level TypedDict
+    SchErrAggEntry = ApatheticSchema_Internal_SchErrAggEntry
+
+    # --- Type aliases -------------------------------------------------------
+
+    # Reference to module-level type alias
+    SchemaErrorAggregator = ApatheticSchema_Internal_SchemaErrorAggregator
+
+    # --- Dataclasses --------------------------------------------------------
+
+    @dataclass
+    class ValidationSummary:
+        """Validation summary dataclass.
+
+        Tracks validation results including errors, warnings, and strict warnings.
+        """
+
+        valid: bool
+        errors: list[str]
+        strict_warnings: list[str]
+        warnings: list[str]
+        strict: bool  # strictness somewhere in our config?
+
+
+# --- Module-level exports for external use ---------------------------------
+
+# Export types with ApatheticSchema_ prefix for external packages
+# (e.g., serger) that import directly from types module
+ApatheticSchema_SchemaErrorAggregator = ApatheticSchema_Internal_SchemaErrorAggregator
+ApatheticSchema_ValidationSummary = ApatheticSchema_Internal_Types.ValidationSummary

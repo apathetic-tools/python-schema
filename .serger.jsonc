@@ -29,7 +29,6 @@
     "**/__main__.py"     // Entry point, not stitched
   ],
 
-  // Output file path (relative to project root)
-  // This will be the final single-file executable
-  "out": "dist/apathetic_schema.py"
+  // Global configuration defaults
+  "log_level": "warning"
 }

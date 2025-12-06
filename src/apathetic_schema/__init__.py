@@ -5,65 +5,75 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from .namespace import apathetic_schema as _apathetic_schema_class
-    from .types import ApatheticSchema_ValidationSummary
-    from .warn_keys_once import ApatheticSchema_SchemaErrorAggregator
+    from .types import (
+        ApatheticSchema_Internal_SchemaErrorAggregator,
+        ApatheticSchema_Internal_SchErrAggEntry,
+    )
 
 # Get reference to the namespace class
 # In stitched mode: class is already defined in namespace.py (executed before this)
-# In installed mode: import from namespace module
-_apathetic_schema_is_standalone = globals().get("__STANDALONE__", False)
+# In package mode: import from namespace module
+_apathetic_schema_is_stitched = globals().get("__STITCHED__", False)
 
-if _apathetic_schema_is_standalone:
+if _apathetic_schema_is_stitched:
     # Stitched mode: class already defined in namespace.py
     # Get reference to the class (it's already in globals from namespace.py)
     _apathetic_schema_raw = globals().get("apathetic_schema")
     if _apathetic_schema_raw is None:
         # Fallback: should not happen, but handle gracefully
-        msg = "apathetic_schema class not found in standalone mode"
+        msg = "apathetic_schema class not found in stitched mode"
         raise RuntimeError(msg)
     # Type cast to help mypy understand this is the apathetic_schema class
     # The import gives us type[apathetic_schema], so cast to
     # type[_apathetic_schema_class]
     apathetic_schema = cast("type[_apathetic_schema_class]", _apathetic_schema_raw)
 else:
-    # Installed mode: import from namespace module
-    # This block is only executed in installed mode, not in standalone builds
+    # Package mode: import from namespace module
+    # This block is only executed in package mode, not in stitched builds
     from .namespace import apathetic_schema
 
     # Ensure the else block is not empty (build script may remove import)
     _ = apathetic_schema
 
 # Export mixin classes and types directly
-from .check_schema_conformance import (  # noqa: E402
-    ApatheticSchema_Internal_CheckSchemaConformance,
-)
-from .collect_msg import ApatheticSchema_Internal_CollectMsg  # noqa: E402
-from .constants import ApatheticSchema_Internal_Constants  # noqa: E402
-from .flush_schema_aggregators import (  # noqa: E402
-    ApatheticSchema_Internal_FlushSchemaAggregators,
-)
-from .types import ApatheticSchema_ValidationSummary  # noqa: E402
-from .validate_typed_dict import (  # noqa: E402
-    ApatheticSchema_Internal_ValidateTypedDict,
-)
-from .warn_keys_once import (  # noqa: E402
-    ApatheticSchema_Internal_WarnKeysOnce,
-    ApatheticSchema_SchemaErrorAggregator,
-)
+# Types are exported from apathetic_schema class below
 
 
-# Note: In embedded builds, __init__.py is excluded from the stitch,
-# so this code never runs and no exports happen (only the class is available).
-# In singlefile/installed builds, __init__.py is included, so exports happen.
+# Export methods and attributes from apathetic_schema class for direct import
+check_schema_conformance = apathetic_schema.check_schema_conformance
+collect_msg = apathetic_schema.collect_msg
+flush_schema_aggregators = apathetic_schema.flush_schema_aggregators
+warn_keys_once = apathetic_schema.warn_keys_once
+validate_typed_dict = apathetic_schema.validate_typed_dict
+
+# Export constants from apathetic_schema class
+DEFAULT_HINT_CUTOFF = apathetic_schema.DEFAULT_HINT_CUTOFF
+AGG_STRICT_WARN = apathetic_schema.AGG_STRICT_WARN
+AGG_WARN = apathetic_schema.AGG_WARN
+
+# Export type aliases and dataclasses from apathetic_schema class
+# For type checking, use the module-level type alias directly
+# At runtime, use the class attribute (which references the same type)
+if TYPE_CHECKING:
+    SchErrAggEntry = ApatheticSchema_Internal_SchErrAggEntry
+    SchemaErrorAggregator = ApatheticSchema_Internal_SchemaErrorAggregator
+else:
+    SchErrAggEntry = apathetic_schema.SchErrAggEntry
+    SchemaErrorAggregator = apathetic_schema.SchemaErrorAggregator
+ValidationSummary = apathetic_schema.ValidationSummary
+
 
 __all__ = [
-    "ApatheticSchema_Internal_CheckSchemaConformance",
-    "ApatheticSchema_Internal_CollectMsg",
-    "ApatheticSchema_Internal_Constants",
-    "ApatheticSchema_Internal_FlushSchemaAggregators",
-    "ApatheticSchema_Internal_ValidateTypedDict",
-    "ApatheticSchema_Internal_WarnKeysOnce",
-    "ApatheticSchema_SchemaErrorAggregator",
-    "ApatheticSchema_ValidationSummary",
+    "AGG_STRICT_WARN",
+    "AGG_WARN",
+    "DEFAULT_HINT_CUTOFF",
+    "SchErrAggEntry",
+    "SchemaErrorAggregator",
+    "ValidationSummary",
     "apathetic_schema",
+    "check_schema_conformance",
+    "collect_msg",
+    "flush_schema_aggregators",
+    "validate_typed_dict",
+    "warn_keys_once",
 ]

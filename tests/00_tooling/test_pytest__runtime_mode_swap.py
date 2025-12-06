@@ -3,12 +3,12 @@
 
 This test verifies that our unique runtime_mode swap functionality works
 correctly. Our conftest.py uses runtime_swap() to allow tests to run against
-either the installed package (src/apathetic_utils) or the standalone single-file script
+either the package (src/apathetic_utils) or the stitched script
 (dist/apathetic_utils.py) based on the RUNTIME_MODE environment variable.
 
 Verifies:
-  - When RUNTIME_MODE=singlefile: All modules resolve to dist/apathetic_utils.py
-  - When RUNTIME_MODE is unset (installed): All modules resolve to src/apathetic_utils/
+  - When RUNTIME_MODE=stitched: All modules resolve to dist/apathetic_utils.py
+  - When RUNTIME_MODE is unset (package): All modules resolve to src/apathetic_utils/
   - Python's import cache (sys.modules) points to the correct sources
   - All submodules load from the expected location
 
@@ -59,7 +59,7 @@ def list_important_modules() -> list[str]:
         package_module = sys.modules.get(amod_schema.__name__.rsplit(".", 1)[0])
 
     if package_module is None or not hasattr(package_module, "__path__"):
-        safe_trace("pkgutil.walk_packages skipped — standalone runtime (no __path__)")
+        safe_trace("pkgutil.walk_packages skipped — stitched runtime (no __path__)")
         # Add the main package and schema module
         important.append(PROGRAM_PACKAGE)
         important.append(amod_schema.__name__)
@@ -75,7 +75,7 @@ def list_important_modules() -> list[str]:
 
 def dump_snapshot(*, include_full: bool = False) -> None:
     """Prints a summary of key modules and (optionally) a full sys.modules dump."""
-    mode: str = os.getenv("RUNTIME_MODE", "installed")
+    mode: str = os.getenv("RUNTIME_MODE", "package")
 
     safe_trace("========== SNAPSHOT ===========")
     safe_trace(f"RUNTIME_MODE={mode}")
@@ -112,13 +112,13 @@ def _get_runtime_module_file() -> str:
     """Get the file path for a module from the main package based on RUNTIME_MODE."""
     mode = os.getenv("RUNTIME_MODE", "unknown")
     # Use a module from the main package (apathetic_schema.schema)
-    # In singlefile mode, get the module from sys.modules to ensure we're using
-    # the version from the standalone script (which was loaded by runtime_swap)
+    # In stitched mode, get the module from sys.modules to ensure we're using
+    # the version from the stitched script (which was loaded by runtime_swap)
     # rather than the one imported at the top of this file (which might be from
-    # the installed package if it was imported before runtime_swap ran)
+    # the package if it was imported before runtime_swap ran)
     schema_module_name = amod_schema.__name__
-    if mode == "singlefile" and schema_module_name in sys.modules:
-        # Use the module from sys.modules, which should be from the standalone script
+    if mode == "stitched" and schema_module_name in sys.modules:
+        # Use the module from sys.modules, which should be from the stitched script
         schema_module_actual = sys.modules[schema_module_name]
         # Check __file__ directly - for stitched modules, should point to
         # dist/apathetic_schema.py
@@ -131,35 +131,35 @@ def _get_runtime_module_file() -> str:
     return str(inspect.getsourcefile(amod_schema))
 
 
-def _verify_singlefile_mode(
+def _verify_stitched_mode(
     runtime_mode: str,
     expected_script: Path,
     utils_file: str,
 ) -> None:
-    """Verify singlefile mode expectations."""
+    """Verify stitched mode expectations."""
     # what does the module itself think?
-    assert runtime_mode == "standalone", (
-        f"Expected runtime_mode='standalone' but got '{runtime_mode}'"
+    assert runtime_mode == "stitched", (
+        f"Expected runtime_mode='stitched' but got '{runtime_mode}'"
     )
 
     # exists
-    assert expected_script.exists(), f"Expected standalone script at {expected_script}"
+    assert expected_script.exists(), f"Expected stitched script at {expected_script}"
 
-    # path peeks - in singlefile mode, modules might be imported from
-    # the installed package, but they should still detect standalone mode
+    # path peeks - in stitched mode, modules might be imported from
+    # the package, but they should still detect stitched mode
     # correctly via detect_runtime_mode()
     # So we only check the path if the module is actually from dist/
     if utils_file.startswith(str(DIST_ROOT)):
-        # Module is from standalone script, verify it's the right file
+        # Module is from stitched script, verify it's the right file
         assert Path(utils_file).samefile(expected_script), (
             f"{utils_file} should be same file as {expected_script}"
         )
     else:
-        # Module is from installed package, but that's OK as long as
-        # detect_runtime_mode() correctly returns "standalone"
+        # Module is from package, but that's OK as long as
+        # detect_runtime_mode() correctly returns "stitched"
         safe_trace(
-            f"Note: {amod_schema.__name__} loaded from installed package "
-            f"({utils_file}), but runtime_mode correctly detected as 'standalone'"
+            f"Note: {amod_schema.__name__} loaded from package "
+            f"({utils_file}), but runtime_mode correctly detected as 'stitched'",
         )
 
     # troubleshooting info
@@ -172,14 +172,14 @@ def _verify_singlefile_mode(
     )
 
 
-def _verify_installed_mode(runtime_mode: str, utils_file: str) -> None:
-    """Verify installed mode expectations."""
+def _verify_package_mode(runtime_mode: str, utils_file: str) -> None:
+    """Verify package mode expectations."""
     # what does the module itself think?
-    assert runtime_mode != "standalone"
+    assert runtime_mode != "stitched"
 
-    # path peeks - in installed mode, modules might be imported from
-    # the installed package (virtualenv site-packages), but they should
-    # still detect installed mode correctly via detect_runtime_mode()
+    # path peeks - in package mode, modules might be imported from
+    # the package (virtualenv site-packages), but they should
+    # still detect package mode correctly via detect_runtime_mode()
     # So we only check the path if the module is actually from src/
     if utils_file.startswith(str(SRC_ROOT)):
         # Module is from source, verify it's in the right location
@@ -187,12 +187,12 @@ def _verify_installed_mode(runtime_mode: str, utils_file: str) -> None:
             f"{utils_file} should be relative to {SRC_ROOT}"
         )
     else:
-        # Module is from installed package, but that's OK as long as
-        # detect_runtime_mode() correctly returns non-standalone mode
+        # Module is from package, but that's OK as long as
+        # detect_runtime_mode() correctly returns non-stitched mode
         safe_trace(
-            f"Note: {amod_schema.__name__} loaded from installed package "
+            f"Note: {amod_schema.__name__} loaded from package "
             f"({utils_file}), but runtime_mode correctly detected as "
-            f"'{runtime_mode}' (not 'standalone')"
+            f"'{runtime_mode}' (not 'stitched')",
         )
 
 
@@ -209,21 +209,21 @@ def _verify_submodules(mode: str, expected_script: Path, runtime_mode: str) -> N
             continue
         mod = importlib.import_module(f"{submodule}")
         path = Path(inspect.getsourcefile(mod) or "")
-        if mode == "singlefile":
+        if mode == "stitched":
             assert path.samefile(expected_script), f"{submodule} loaded from {path}"
-        # In installed mode, modules might be from src/ (editable install)
-        # or from installed package (regular install). Both are acceptable
-        # as long as detect_runtime_mode() correctly identifies non-standalone mode.
+        # In package mode, modules might be from src/ (editable install)
+        # or from package (regular install). Both are acceptable
+        # as long as detect_runtime_mode() correctly identifies non-stitched mode.
         elif not path.is_relative_to(SRC_ROOT):
-            # Module is from installed package, verify it's not from dist/
+            # Module is from package, verify it's not from dist/
             assert not path.samefile(expected_script), (
-                f"{submodule} should not be from standalone script in "
-                f"installed mode: {path}"
+                f"{submodule} should not be from stitched script in "
+                f"package mode: {path}"
             )
             safe_trace(
-                f"Note: {submodule} loaded from installed package ({path}), "
+                f"Note: {submodule} loaded from package ({path}), "
                 f"but runtime_mode correctly detected as '{runtime_mode}' "
-                f"(not 'standalone')"
+                f"(not 'stitched')",
             )
 
 
@@ -232,8 +232,8 @@ def test_pytest_runtime_cache_integrity() -> None:
 
     Ensures that modules imported at the top of test files resolve to the
     correct source based on RUNTIME_MODE:
-    - singlefile mode: All modules must load from dist/apathetic_schema.py
-    - installed mode: All modules must load from src/apathetic_schema/
+    - stitched mode: All modules must load from dist/apathetic_schema.py
+    - package mode: All modules must load from src/apathetic_schema/
 
     Also verifies that Python's import cache (sys.modules) doesn't have stale
     references pointing to the wrong runtime.
@@ -252,10 +252,10 @@ def test_pytest_runtime_cache_integrity() -> None:
     # Access via main module to get the function from the namespace class
     runtime_mode = _runtime.detect_runtime_mode(PROGRAM_PACKAGE)
 
-    if mode == "singlefile":
-        _verify_singlefile_mode(runtime_mode, expected_script, utils_file)
+    if mode == "stitched":
+        _verify_stitched_mode(runtime_mode, expected_script, utils_file)
     else:
-        _verify_installed_mode(runtime_mode, utils_file)
+        _verify_package_mode(runtime_mode, utils_file)
 
     # --- verify both ---
     _verify_submodules(mode, expected_script, runtime_mode)
@@ -271,7 +271,7 @@ def test_debug_dump_all_module_origins() -> None:
 
     Usage:
         TRACE=1 poetry run pytest -k debug -s
-        RUNTIME_MODE=singlefile TRACE=1 poetry run pytest -k debug -s
+        RUNTIME_MODE=stitched TRACE=1 poetry run pytest -k debug -s
     """
     # --- verify ---
 

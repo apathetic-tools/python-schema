@@ -5,12 +5,18 @@
 # ruff: noqa: SLF001
 # pyright: reportPrivateUsage=false
 
+from __future__ import annotations
+
+import sys
 from typing import Any, TypedDict
 
-from apathetic_schema.validate_typed_dict import (
-    ApatheticSchema_Internal_ValidateTypedDict,
-)
 from tests.utils import make_summary
+
+
+# Access submodule via sys.modules (runtime_swap handles the swap transparently)
+ApatheticSchema_Internal_ValidateTypedDict = sys.modules[
+    "apathetic_schema.validate_typed_dict"
+].ApatheticSchema_Internal_ValidateTypedDict
 
 
 # ---------------------------------------------------------------------------
@@ -60,7 +66,7 @@ def test_validate_list_value_rejects_nonlist() -> None:
 
     # --- verify ---
     assert ok is False
-    assert any("expected list" in m for m in summary.errors)
+    assert any("expected list" in m for m in summary.errors)  # type: ignore[attr-defined]
 
 
 def test_validate_list_value_rejects_wrong_element_type() -> None:
@@ -81,7 +87,7 @@ def test_validate_list_value_rejects_wrong_element_type() -> None:
 
     # --- verify ---
     assert ok is False
-    assert any("expected int" in m for m in summary.errors)
+    assert any("expected int" in m for m in summary.errors)  # type: ignore[attr-defined]
 
 
 def test_validate_list_value_handles_typed_dict_elements() -> None:
@@ -107,7 +113,7 @@ def test_validate_list_value_handles_typed_dict_elements() -> None:
     # --- verify ---
     assert isinstance(ok, bool)
     # should record some message (error under strict)
-    assert summary.errors or summary.strict_warnings or summary.warnings
+    assert summary.errors or summary.strict_warnings or summary.warnings  # type: ignore[attr-defined]
 
 
 def test_validate_list_value_accepts_empty_list() -> None:
@@ -146,7 +152,7 @@ def test_validate_list_value_rejects_nested_mixed_types() -> None:
 
     # --- verify ---
     assert not ok
-    assert any(("expected list" in m) or ("expected int" in m) for m in summary.errors)
+    assert any(("expected list" in m) or ("expected int" in m) for m in summary.errors)  # type: ignore[attr-defined]
 
 
 def test_validate_list_value_mixed_types_like_integration() -> None:
@@ -168,7 +174,7 @@ def test_validate_list_value_mixed_types_like_integration() -> None:
 
     # --- verify ---
     assert ok is False
-    assert summary.errors  # message was collected
+    assert summary.errors  # type: ignore[attr-defined]  # message was collected
 
 
 def test_validate_list_value_respects_prewarn() -> None:
@@ -195,7 +201,7 @@ def test_validate_list_value_respects_prewarn() -> None:
 
     # --- verify ---
     assert ok is True
-    pool = summary.errors + summary.strict_warnings + summary.warnings
+    pool = summary.errors + summary.strict_warnings + summary.warnings  # type: ignore[attr-defined]
     assert not any("dry_run" in m and "unknown key" in m for m in pool)
 
 
@@ -222,8 +228,8 @@ def test_validate_list_value_includes_examples_in_error() -> None:
 
     # --- verify ---
     assert ok is False
-    assert summary.errors
-    error_msg = summary.errors[0]
+    assert summary.errors  # type: ignore[attr-defined]
+    error_msg = summary.errors[0]  # type: ignore[attr-defined]
     # Should include the example for build.include
     assert "expected list[str]" in error_msg
     assert '["src/", "lib/"]' in error_msg
