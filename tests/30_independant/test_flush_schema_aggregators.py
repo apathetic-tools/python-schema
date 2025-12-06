@@ -32,9 +32,9 @@ def test_flush_schema_aggregators_flushes_strict_bucket() -> None:
     # --- verify ---
     # bucket should be cleared
     assert not agg[amod_schema.AGG_STRICT_WARN]
-    assert summary.valid is False  # type: ignore[attr-defined]
-    assert len(summary.strict_warnings) == 1  # type: ignore[attr-defined]
-    msg = summary.strict_warnings[0]  # type: ignore[attr-defined]
+    assert summary.valid is False
+    assert len(summary.strict_warnings) == 1
+    msg = summary.strict_warnings[0]
     assert "dry-run" in msg
     assert "build #1" in msg
     assert "build #2" in msg
@@ -64,10 +64,10 @@ def test_flush_schema_aggregators_flushes_warning_bucket() -> None:
 
     # --- verify ---
     assert not agg[amod_schema.AGG_WARN]
-    assert summary.valid is True  # type: ignore[attr-defined]
-    assert summary.warnings == ["Ignored root-only in top-level configuration"]  # type: ignore[attr-defined]
-    assert summary.strict_warnings == []  # type: ignore[attr-defined]
-    assert summary.errors == []  # type: ignore[attr-defined]
+    assert summary.valid is True
+    assert summary.warnings == ["Ignored root-only in top-level configuration"]
+    assert summary.strict_warnings == []
+    assert summary.errors == []
 
 
 def test_flush_schema_aggregators_cleans_context_prefixes() -> None:
@@ -93,6 +93,6 @@ def test_flush_schema_aggregators_cleans_context_prefixes() -> None:
 
     # --- verify ---
     assert not agg[amod_schema.AGG_STRICT_WARN]
-    msg = summary.strict_warnings[0]  # type: ignore[attr-defined]
+    msg = summary.strict_warnings[0]
     # Context prefixes 'in' and 'on' should not be duplicated
     assert msg == "Ignored noop in build #3, build #4, build #5"

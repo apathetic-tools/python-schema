@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 from .types import (
     ApatheticSchema_SchemaErrorAggregator,
     ApatheticSchema_SchErrAggEntry,
+    ApatheticSchema_ValidationSummary,
 )
 
 
@@ -56,8 +57,6 @@ AGG_WARN = apathetic_schema.AGG_WARN
 
 # Export type aliases and dataclasses
 # Types are imported from types module above
-# ValidationSummary comes from apathetic_schema class
-ValidationSummary = apathetic_schema.ValidationSummary
 
 
 __all__ = [
@@ -66,7 +65,7 @@ __all__ = [
     "DEFAULT_HINT_CUTOFF",
     "ApatheticSchema_SchErrAggEntry",
     "ApatheticSchema_SchemaErrorAggregator",
-    "ValidationSummary",
+    "ApatheticSchema_ValidationSummary",
     "apathetic_schema",
     "check_schema_conformance",
     "collect_msg",

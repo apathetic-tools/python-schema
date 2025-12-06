@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 
 if TYPE_CHECKING:
-    from .types import ApatheticSchema_Internal_Types
+    from .types import ApatheticSchema_ValidationSummary
 
 
 class ApatheticSchema_Internal_CollectMsg:  # noqa: N801  # pyright: ignore[reportUnusedClass]
@@ -23,7 +23,7 @@ class ApatheticSchema_Internal_CollectMsg:  # noqa: N801  # pyright: ignore[repo
         msg: str,
         *,
         strict: bool,
-        summary: ApatheticSchema_Internal_Types.ValidationSummary,  # modified in-place
+        summary: ApatheticSchema_ValidationSummary,  # modified in-place
         is_error: bool = False,
     ) -> None:
         """Route a message to the appropriate bucket.

@@ -69,7 +69,7 @@ def test_validate_typed_dict_rejects_non_dict() -> None:
 
     # --- verify ---
     assert ok is False
-    assert any("expected an object" in m for m in summary.errors)  # type: ignore[attr-defined]
+    assert any("expected an object" in m for m in summary.errors)
 
 
 def test_validate_typed_dict_detects_unknown_keys() -> None:
@@ -90,7 +90,7 @@ def test_validate_typed_dict_detects_unknown_keys() -> None:
     # --- verify ---
     assert ok is False
     # unknown keys appear as warnings (or strict_warnings if strict=True)
-    pool = summary.warnings + summary.strict_warnings + summary.errors  # type: ignore[attr-defined]
+    pool = summary.warnings + summary.strict_warnings + summary.errors
     assert any("unknown key" in m.lower() for m in pool)
 
 
@@ -125,7 +125,7 @@ def test_validate_typed_dict_nested_recursion() -> None:
     bad: Outer = {"inner": {"include": [123], "out": "dist"}}  # type: ignore[list-item]
 
     # --- patch, execute and verify ---
-    summary1 = amod_schema.ValidationSummary(True, [], [], [], True)
+    summary1 = amod_schema.ApatheticSchema_ValidationSummary(True, [], [], [], True)
     assert ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
         "root",
         good,
@@ -136,7 +136,7 @@ def test_validate_typed_dict_nested_recursion() -> None:
         field_path="root",
     )
 
-    summary2 = amod_schema.ValidationSummary(True, [], [], [], True)
+    summary2 = amod_schema.ApatheticSchema_ValidationSummary(True, [], [], [], True)
     assert not ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
         "root",
         bad,
@@ -169,7 +169,7 @@ def test_validate_typed_dict_respects_prewarn() -> None:
 
     # --- verify ---
     assert ok is True
-    pool = summary.errors + summary.strict_warnings + summary.warnings  # type: ignore[attr-defined]
+    pool = summary.errors + summary.strict_warnings + summary.warnings
     assert not any("dry_run" in m and "unknown key" in m for m in pool)
 
 
@@ -286,7 +286,7 @@ def test_validate_typed_dict_example_message_formatting() -> None:
     # --- verify ---
     assert ok is False
     # Error message should include example
-    error_msgs = " ".join(summary.errors)  # type: ignore[attr-defined]
+    error_msgs = " ".join(summary.errors)
     assert "e.g." in error_msgs or "30" in error_msgs
 
 
@@ -315,7 +315,7 @@ def test_validate_typed_dict_unknown_keys_with_hints() -> None:
     assert ok is False
     # Note: get_close_matches might not always find a match depending on cutoff
     # So we just check that unknown key error is present
-    pool = summary.warnings + summary.strict_warnings + summary.errors  # type: ignore[attr-defined]
+    pool = summary.warnings + summary.strict_warnings + summary.errors
     assert any("unknown key" in m.lower() or "outpt" in m.lower() for m in pool)
 
 
@@ -342,7 +342,7 @@ def test_validate_typed_dict_unknown_keys_location_handling() -> None:
     # --- verify ---
     assert ok is False
     # Location should be processed correctly
-    pool = summary.warnings + summary.strict_warnings + summary.errors  # type: ignore[attr-defined]
+    pool = summary.warnings + summary.strict_warnings + summary.errors
     # Should mention unknown key
     assert any("unknown" in m.lower() for m in pool)
 

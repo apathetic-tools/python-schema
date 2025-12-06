@@ -3,17 +3,20 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from apathetic_utils import cast_hint
 
 from .collect_msg import ApatheticSchema_Internal_CollectMsg
 from .constants import ApatheticSchema_Internal_Constants
 from .types import (
-    ApatheticSchema_Internal_Types,
     ApatheticSchema_SchemaErrorAggregator,
     ApatheticSchema_SchErrAggEntry,
 )
+
+
+if TYPE_CHECKING:
+    from .types import ApatheticSchema_ValidationSummary
 
 
 # Re-export for external packages (e.g., serger) that import from this module
@@ -37,7 +40,7 @@ class ApatheticSchema_Internal_WarnKeysOnce:  # noqa: N801  # pyright: ignore[re
         msg: str,
         *,
         strict_config: bool,
-        summary: ApatheticSchema_Internal_Types.ValidationSummary,  # modified in-place
+        summary: ApatheticSchema_ValidationSummary,  # modified in-place
         agg: ApatheticSchema_SchemaErrorAggregator | None,
     ) -> tuple[bool, set[str]]:
         """Warn once for known bad keys (e.g. dry-run, root-only).

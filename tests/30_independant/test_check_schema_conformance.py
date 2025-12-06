@@ -41,7 +41,7 @@ def test_check_schema_conformance_matches_list_validator() -> None:
     cfg: dict[str, Any] = {"include": ["src", 42], "out": "dist"}
 
     # --- patch and execute ---
-    summary1 = amod_schema.ValidationSummary(True, [], [], [], True)
+    summary1 = amod_schema.ApatheticSchema_ValidationSummary(True, [], [], [], True)
     ok_list = ApatheticSchema_Internal_ValidateTypedDict._validate_list_value(  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
         "ctx",
         "include",
@@ -53,7 +53,7 @@ def test_check_schema_conformance_matches_list_validator() -> None:
         field_path="root.include",
     )
 
-    summary2 = amod_schema.ValidationSummary(True, [], [], [], True)
+    summary2 = amod_schema.ApatheticSchema_ValidationSummary(True, [], [], [], True)
     ok_schema = amod_schema.check_schema_conformance(
         cfg,
         schema,
@@ -106,7 +106,7 @@ def test_check_schema_conformance_respects_prewarn() -> None:
 
     # --- verify ---
     assert ok is True
-    pool = summary.errors + summary.strict_warnings + summary.warnings  # type: ignore[attr-defined]
+    pool = summary.errors + summary.strict_warnings + summary.warnings
     assert not any("dry_run" in m and "unknown key" in m for m in pool)
 
 

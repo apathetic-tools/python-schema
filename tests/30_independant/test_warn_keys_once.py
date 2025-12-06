@@ -35,9 +35,9 @@ def test_warn_keys_once_no_bad_keys() -> None:
     # --- verify ---
     assert valid is True
     assert found == set()
-    assert not summary.warnings  # type: ignore[attr-defined]
-    assert not summary.strict_warnings  # type: ignore[attr-defined]
-    assert not summary.errors  # type: ignore[attr-defined]
+    assert not summary.warnings
+    assert not summary.strict_warnings
+    assert not summary.errors
 
 
 def test_warn_keys_once_with_aggregator_non_strict() -> None:
@@ -73,8 +73,8 @@ def test_warn_keys_once_with_aggregator_non_strict() -> None:
     assert entry["msg"] == expected_msg
     assert "in top-level configuration" in entry["contexts"]
     # Summary should not be modified when using aggregator
-    assert not summary.warnings  # type: ignore[attr-defined]
-    assert not summary.strict_warnings  # type: ignore[attr-defined]
+    assert not summary.warnings
+    assert not summary.strict_warnings
 
 
 def test_warn_keys_once_with_aggregator_strict() -> None:
@@ -176,11 +176,11 @@ def test_warn_keys_once_without_aggregator_non_strict() -> None:
     # --- verify ---
     assert valid is True
     assert found == {"dry_run"}
-    assert len(summary.warnings) == 1  # type: ignore[attr-defined]
-    assert "dry_run" in summary.warnings[0]  # type: ignore[attr-defined]
-    assert "in config" in summary.warnings[0]  # type: ignore[attr-defined]
-    assert not summary.strict_warnings  # type: ignore[attr-defined]
-    assert not summary.errors  # type: ignore[attr-defined]
+    assert len(summary.warnings) == 1
+    assert "dry_run" in summary.warnings[0]
+    assert "in config" in summary.warnings[0]
+    assert not summary.strict_warnings
+    assert not summary.errors
 
 
 def test_warn_keys_once_without_aggregator_strict() -> None:
@@ -205,11 +205,11 @@ def test_warn_keys_once_without_aggregator_strict() -> None:
     # --- verify ---
     assert valid is False  # strict mode
     assert found == {"dry_run"}
-    assert len(summary.strict_warnings) == 1  # type: ignore[attr-defined]
-    assert "dry_run" in summary.strict_warnings[0]  # type: ignore[attr-defined]
-    assert "in config" in summary.strict_warnings[0]  # type: ignore[attr-defined]
-    assert not summary.warnings  # type: ignore[attr-defined]
-    assert not summary.errors  # type: ignore[attr-defined]
+    assert len(summary.strict_warnings) == 1
+    assert "dry_run" in summary.strict_warnings[0]
+    assert "in config" in summary.strict_warnings[0]
+    assert not summary.warnings
+    assert not summary.errors
 
 
 def test_warn_keys_once_case_insensitive_matching() -> None:
@@ -235,8 +235,8 @@ def test_warn_keys_once_case_insensitive_matching() -> None:
     # --- verify ---
     # Should find match case-insensitively and preserve original case from cfg
     assert found == {"DRY_RUN"}  # Original case from cfg preserved
-    assert len(summary.warnings) == 1  # type: ignore[attr-defined]
-    msg = summary.warnings[0]  # type: ignore[attr-defined]
+    assert len(summary.warnings) == 1
+    msg = summary.warnings[0]
     assert "DRY_RUN" in msg  # Original case should appear in message
 
 
@@ -261,8 +261,8 @@ def test_warn_keys_once_multiple_bad_keys() -> None:
 
     # --- verify ---
     assert found == {"dry_run", "deprecated"}
-    assert len(summary.warnings) == 1  # type: ignore[attr-defined]
-    msg = summary.warnings[0]  # type: ignore[attr-defined]
+    assert len(summary.warnings) == 1
+    msg = summary.warnings[0]
     # Keys should be sorted in message
     assert "dry_run" in msg or "deprecated" in msg
 
@@ -287,8 +287,8 @@ def test_warn_keys_once_message_formatting() -> None:
     )
 
     # --- verify ---
-    assert len(summary.warnings) == 1  # type: ignore[attr-defined]
-    msg = summary.warnings[0]  # type: ignore[attr-defined]
+    assert len(summary.warnings) == 1
+    msg = summary.warnings[0]
     assert "bad" in msg
     assert "in my config" in msg
     # Should be formatted, not contain literal {keys} or {ctx}

@@ -11,8 +11,8 @@ from .constants import ApatheticSchema_Internal_Constants
 
 if TYPE_CHECKING:
     from .types import (
-        ApatheticSchema_Internal_Types,
         ApatheticSchema_SchemaErrorAggregator,
+        ApatheticSchema_ValidationSummary,
     )
 
 
@@ -27,7 +27,7 @@ class ApatheticSchema_Internal_FlushSchemaAggregators:  # noqa: N801  # pyright:
     @staticmethod
     def flush_schema_aggregators(
         *,
-        summary: ApatheticSchema_Internal_Types.ValidationSummary,
+        summary: ApatheticSchema_ValidationSummary,
         agg: ApatheticSchema_SchemaErrorAggregator,
     ) -> None:
         """Flush aggregated schema validation messages to the summary.

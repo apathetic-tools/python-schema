@@ -12,9 +12,9 @@ def make_summary(
     strict_warnings: list[str] | None = None,
     warnings: list[str] | None = None,
     strict: bool = True,
-) -> apathetic_schema.ValidationSummary:  # type: ignore[valid-type]
+) -> apathetic_schema.ApatheticSchema_ValidationSummary:
     """Helper to create a clean ValidationSummary."""
-    return apathetic_schema.ValidationSummary(
+    return apathetic_schema.ApatheticSchema_ValidationSummary(
         valid=valid,
         errors=errors or [],
         strict_warnings=strict_warnings or [],

@@ -54,7 +54,7 @@ def test_validate_typed_dict_rejects_non_dict() -> None:
 
     # --- verify ---
     assert ok is False
-    assert any("expected an object" in m for m in summary.errors)  # type: ignore[attr-defined]
+    assert any("expected an object" in m for m in summary.errors)
 
 
 def test_validate_typed_dict_detects_unknown_keys() -> None:
@@ -75,7 +75,7 @@ def test_validate_typed_dict_detects_unknown_keys() -> None:
     # --- verify ---
     assert ok is False
     # unknown keys appear as warnings (or strict_warnings if strict=True)
-    pool = summary.warnings + summary.strict_warnings + summary.errors  # type: ignore[attr-defined]
+    pool = summary.warnings + summary.strict_warnings + summary.errors
     assert any("unknown key" in m.lower() for m in pool)
 
 
@@ -110,7 +110,7 @@ def test_validate_typed_dict_nested_recursion() -> None:
     bad: Outer = {"inner": {"include": [123], "out": "dist"}}  # type: ignore[list-item]
 
     # --- patch, execute and verify ---
-    summary1 = amod_schema.ValidationSummary(True, [], [], [], True)
+    summary1 = amod_schema.ApatheticSchema_ValidationSummary(True, [], [], [], True)
     assert amod_schema.validate_typed_dict(
         "root",
         good,
@@ -121,7 +121,7 @@ def test_validate_typed_dict_nested_recursion() -> None:
         field_path="root",
     )
 
-    summary2 = amod_schema.ValidationSummary(True, [], [], [], True)
+    summary2 = amod_schema.ApatheticSchema_ValidationSummary(True, [], [], [], True)
     assert not amod_schema.validate_typed_dict(
         "root",
         bad,
@@ -155,5 +155,5 @@ def test_validate_typed_dict_respects_prewarn() -> None:
 
     # --- verify ---
     assert ok is True
-    pool = summary.errors + summary.strict_warnings + summary.warnings  # type: ignore[attr-defined]
+    pool = summary.errors + summary.strict_warnings + summary.warnings
     assert not any("dry_run" in m and "unknown key" in m for m in pool)

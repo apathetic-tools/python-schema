@@ -58,9 +58,9 @@ def test_validate_scalar_value_accepts_correct_type() -> None:
 
     # --- verify ---
     assert ok is True
-    assert not summary.errors  # type: ignore[attr-defined]
-    assert not summary.warnings  # type: ignore[attr-defined]
-    assert not summary.strict_warnings  # type: ignore[attr-defined]
+    assert not summary.errors
+    assert not summary.warnings
+    assert not summary.strict_warnings
 
 
 def test_validate_scalar_value_rejects_wrong_type() -> None:
@@ -80,7 +80,7 @@ def test_validate_scalar_value_rejects_wrong_type() -> None:
 
     # --- verify ---
     assert ok is False
-    assert any("expected int" in m for m in summary.errors)  # type: ignore[attr-defined]
+    assert any("expected int" in m for m in summary.errors)
 
 
 def test_validate_scalar_value_handles_fallback_path(
