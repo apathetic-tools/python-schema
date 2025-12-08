@@ -2,6 +2,14 @@
 
 <!-- version list -->
 
+## v0.1.3 (2025-12-08)
+
+### Bug Fixes
+
+- **typecheck**: Resolve pyright error in import semantics test
+  ([`9340a8a`](https://github.com/apathetic-tools/python-schema/commit/9340a8a3457c1c45ba0807ef809fb377760b73c0))
+
+
 ## v0.1.2 (2025-12-06)
 
 ### Bug Fixes
