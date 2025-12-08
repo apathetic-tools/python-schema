@@ -54,7 +54,7 @@ typecheck = ["typecheck:mypy", "typecheck:pyright"]
 # 🧪 Tests (runs all three: package + stitched + zipapp)
 test = [
   "test:pytest:package",
-#  "test:pytest:stitched",  # Temporarily disabled while serger is being updated
+  "test:pytest:stitched",
 #  "test:pytest:zipapp"
 ]
 "test:pytest:package" = "pytest"
@@ -91,13 +91,13 @@ test = [
 ]
 "test:fast:all" = [
   "test:fast:package",
-#  "test:fast:stitched",
+  "test:fast:stitched",
 #  "test:fast:zipapp"
 ]
 # Parallel: all three modes with parallel execution
 "test:parallel" = [
   "test:pytest:package:parallel",
-#  "test:pytest:stitched:parallel",  # Temporarily disabled while serger is being updated
+  "test:pytest:stitched:parallel",
 #  "test:pytest:zipapp:parallel"
 ]
 
@@ -203,7 +203,7 @@ dev = [
     "pytest-xdist (>=3.8.0,<4.0.0)",
     "pyright (>=1.1.407,<2.0.0)",
     "python-semantic-release (>=10.0.0,<11.0.0)",
-    "serger (>=0.1.0,<0.2.0)",
+    "serger (>=0.1.0,<2.0.0)",
     "zipbundler (>=0.1.0,<2.0.0)",
     "sheave (>=0.3.0,<2.0.0)",
 ]

@@ -35,7 +35,7 @@ def test_import_semantics_work_in_all_runtime_modes() -> None:
         "apathetic_utils namespace should be accessible via module"
     )
 
-    apathetic_utils_ns = mod_autils.apathetic_utils
+    apathetic_utils_ns = mod_autils.apathetic_utils  # pyright: ignore[reportPrivateImportUsage]
 
     # --- verify ---
     # Verify the namespace is a class (validates import semantics worked)

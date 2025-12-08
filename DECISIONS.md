@@ -146,6 +146,8 @@ It provides **automatic dependency resolution and bundling** — reading depende
 Zipbundler's integration with Python packaging standards and its straightforward CLI make it ideal for the project's goal of **minimizing build complexity** while maintaining portability.  
 As part of the Apathetic Tools ecosystem, it aligns with the project's preference for tools within the same ecosystem when available.
 
+**Note**: `shiv` was initially considered but was later removed in favor of `zipbundler` to maintain consistency within the Apathetic Tools ecosystem.
+
 This choice supports the three-tier distribution model by providing a reliable, automated way to produce zipapp distributions without manual dependency management or complex build scripts.
 
 

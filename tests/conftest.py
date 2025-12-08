@@ -2,7 +2,7 @@
 """Shared test setup for project.
 
 Each pytest run now targets a single runtime mode:
-- Normal mode (default): uses src/apathetic_schema
+- Package mode (default): uses src/apathetic_schema
 - Stitched mode: uses dist/apathetic_schema.py when RUNTIME_MODE=stitched
 - Zipapp mode: uses dist/apathetic_schema.pyz when RUNTIME_MODE=zipapp
 
@@ -18,7 +18,6 @@ import apathetic_utils
 import pytest
 
 from tests.utils.constants import (
-    BUNDLER_SCRIPT,
     PROGRAM_PACKAGE,
     PROGRAM_SCRIPT,
     PROJ_ROOT,
@@ -31,19 +30,7 @@ apathetic_utils.runtime_swap(
     root=PROJ_ROOT,
     package_name=PROGRAM_PACKAGE,
     script_name=PROGRAM_SCRIPT,
-    bundler_script=BUNDLER_SCRIPT,
 )
-
-# Workaround: serger is being updated to set __STITCHED__, but currently sets
-# __STANDALONE__ instead. Set __STITCHED__ based on __STANDALONE__ so
-# detect_runtime_mode() works correctly.
-if (
-    PROGRAM_PACKAGE in sys.modules
-    and hasattr(sys.modules[PROGRAM_PACKAGE], "__STANDALONE__")
-    and sys.modules[PROGRAM_PACKAGE].__STANDALONE__
-    and not hasattr(sys.modules[PROGRAM_PACKAGE], "__STITCHED__")
-):
-    sys.modules[PROGRAM_PACKAGE].__STITCHED__ = True  # type: ignore[attr-defined]
 
 # Import apathetic_logging AFTER runtime_swap so we get the correct version
 # In stitched builds, apathetic_logging is registered in sys.modules
