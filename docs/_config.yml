@@ -72,7 +72,6 @@ license:
   text: MIT-a-NOAI
   url: https://github.com/apathetic-tools/python-logs/blob/main/LICENSE
 
-
 # Build settings
 lsi: false  # GHP locked value
 safe: true  # GHP locked value

@@ -265,5 +265,5 @@ Desktop.ini
 # Jenkyl documentation
 docs/_site/
 
-# winmerge
+# Backups
 *.bak

@@ -14,7 +14,7 @@ for POSSIBLE_PATH in /usr/bin/python3.10 /usr/local/bin/python3.10; do
 done
 # If not in system locations, check PATH but exclude mise-managed paths
 if [ -z "$PY310_PATH" ]; then
-  CMD_PATH=$(command -v python3.10 2>/dev/null)
+  CMD_PATH=$(command -v python3.10 2>/dev/null || true)
   if [ -n "$CMD_PATH" ] && ! echo "$CMD_PATH" | grep -qE "(mise|\.mise)"; then
     if "$CMD_PATH" --version 2>&1 | grep -q "3.10"; then
       PY310_PATH="$CMD_PATH"
@@ -26,18 +26,24 @@ if [ -n "$PY310_PATH" ]; then
   poetry env use "$PY310_PATH" && poetry install
 # Fall back to mise
 elif command -v mise >/dev/null 2>&1; then
-  # Try to find Python 3.10 via mise
-  MISE_PYTHON=$(mise which python3.10 2>/dev/null || true)
+  # Try to find Python 3.10 via mise (check in standard mise install locations)
+  MISE_PYTHON=""
+  for MISE_BASE in "${HOME}/.local/share/mise" "${HOME}/.mise"; do
+    if [ -x "$MISE_BASE/installs/python/3.10/bin/python3.10" ]; then
+      MISE_PYTHON="$MISE_BASE/installs/python/3.10/bin/python3.10"
+      break
+    fi
+  done
   if [ -n "$MISE_PYTHON" ] && [ -x "$MISE_PYTHON" ]; then
     poetry env use "$MISE_PYTHON" && poetry install
   else
-    echo "❌ Python 3.10 not found via mise."
-    echo "   Install with: mise install python@3.10"
-    echo "   Or run: poetry run poe setup:python:check"
+    echo "❌ Python 3.10 not found via mise." >&2
+    echo "   Install with: mise install python@3.10" >&2
+    echo "   Or run: poetry run poe setup:python:check" >&2
     exit 1
   fi
 else
-  echo "❌ Python 3.10 not found. Run: poetry run poe setup:python:check"
+  echo "❌ Python 3.10 not found. Run: poetry run poe setup:python:check" >&2
   exit 1
 fi
 

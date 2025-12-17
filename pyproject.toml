@@ -15,6 +15,7 @@ dependencies = [
     "apathetic-logging (>=0.3.2,<2.0.0)"
 ]
 keywords = ["library", "utilities", "utils", "schema", "validation", "typeddict", "config", "json", "jsonc", "toml"]
+# https://pypi.org/classifiers/
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -39,11 +40,13 @@ Changelog = "https://github.com/apathetic-tools/python-schema/releases"
 [tool.poe.tasks]
 # 🧩 All-in-one
 "check:fix" = ["pre-commit:install", "fix", "typecheck", "test:parallel"]
+"check:fix:notests" = ["pre-commit:install", "fix", "typecheck"]
 
 # 🔍 Linting and static checks
-check = ["lint", "typecheck",  "test:parallel"]
+check = ["lint", "typecheck", "validate:classifiers", "test:parallel"]
 lint = ["lint:ruff"]
 "lint:ruff" = "ruff check ."
+"validate:classifiers" = "python dev/validate_classifiers.py"
 
 # 🧠 Type checking
 typecheck = ["typecheck:mypy", "typecheck:pyright"]
@@ -55,7 +58,7 @@ typecheck = ["typecheck:mypy", "typecheck:pyright"]
 test = [
   "test:pytest:package",
   "test:pytest:stitched",
-#  "test:pytest:zipapp"
+  "test:pytest:zipapp"
 ]
 "test:pytest:package" = "pytest"
 "test:pytest:package:parallel" = "pytest -n auto"
@@ -92,13 +95,13 @@ test = [
 "test:fast:all" = [
   "test:fast:package",
   "test:fast:stitched",
-#  "test:fast:zipapp"
+  "test:fast:zipapp"
 ]
 # Parallel: all three modes with parallel execution
 "test:parallel" = [
   "test:pytest:package:parallel",
   "test:pytest:stitched:parallel",
-#  "test:pytest:zipapp:parallel"
+  "test:pytest:zipapp:parallel"
 ]
 
 # 📊 Coverage reporting
@@ -136,10 +139,11 @@ fix = ["sync:ai:guidance", "fix:ruff:package", "fix:format:package"]
 "fix:format:dist" = { shell = "if [ -d dist ]; then ruff format dist -q; fi" }
 
 # 🧩 Build and license
-"sync:ai:guidance" = "python -m sync_ai_guidance --quiet"
+#"sync:ai:guidance" = "python -m sync_ai_guidance --quiet"
+"sync:ai:guidance" = "echo 'currently disabled'"
 # this creates the stitched script from the module, it need to use serger not zipbundler to do that
-"build:stitched" = "python -m serger"
-"build:zipapp" = "python -m zipbundler -m serger.__main__:main -c -o dist/serger.pyz src --quiet"
+"build:stitched" = "python -m serger --quiet"
+"build:zipapp" = "python -m zipbundler -c -o dist/apathetic_schema src --quiet"
 
 # 🚀 Release management (semantic-release)
 "release:version" = "semantic-release version --noop"
@@ -149,10 +153,15 @@ fix = ["sync:ai:guidance", "fix:ruff:package", "fix:format:package"]
 # 🔧 Setup and installation
 "pre-commit:install" = "bash dev/install_pre_commit_hooks.sh"
 
+# 📤 Git operations
+"git:push:rebase" = { shell = "git pull --rebase && git push" }
+
 # 🐍 Python version management
 "env:py310" = "bash dev/env_use_py310.sh"
 "env:py311" = "bash dev/env_use_py311.sh"
 "env:py312" = "bash dev/env_use_py312.sh"
+"env:py313" = "bash dev/env_use_py313.sh"
+"env:py314" = "bash dev/env_use_py314.sh"
 "env:py3x" = "bash dev/env_use_py3x.sh"
 "test:py310" = [
   "env:py310",
@@ -166,6 +175,16 @@ fix = ["sync:ai:guidance", "fix:ruff:package", "fix:format:package"]
 ]
 "test:py312" = [
   "env:py312",
+  "test:parallel",
+  "env:py3x"
+]
+"test:py313" = [
+  "env:py313",
+  "test:parallel",
+  "env:py3x"
+]
+"test:py314" = [
+  "env:py314",
   "test:parallel",
   "env:py3x"
 ]
@@ -203,6 +222,7 @@ dev = [
     "pytest-xdist (>=3.8.0,<4.0.0)",
     "pyright (>=1.1.407,<2.0.0)",
     "python-semantic-release (>=10.0.0,<11.0.0)",
+    "trove-classifiers (>=2025.11.14.15,<2026.0.0.0)",
     "serger (>=0.1.0,<2.0.0)",
     "zipbundler (>=0.1.0,<2.0.0)",
     "sheave (>=0.3.0,<2.0.0)",
@@ -335,7 +355,7 @@ typeCheckingMode = "strict"
 [tool.coverage.run]
 source = ["src"]
 omit = ["*/tests/*", "*/test_*.py"]
-# Enable subprocess coverage tracking (for python -m apathetic_schema calls)
+# Enable subprocess coverage tracking (for python -m <package> calls)
 concurrency = ["thread", "multiprocessing"]
 sigterm = true
 
@@ -417,9 +437,6 @@ newline_sequence = "\n"
 keep_trailing_newline = false
 
 # --- Poetry Build System ---
-[project.scripts]
-apathetic_schema = "apathetic_schema.__main__:main"
-
 [build-system]
 requires = ["poetry-core>=2.0.0"]
 build-backend = "poetry.core.masonry.api"

@@ -1,14 +1,14 @@
-# tests/0_independant/test_pytest__runtime_mode_swap.py
+# tests/00_tooling/test_pytest__runtime_mode_swap.py
 """Verify runtime mode swap functionality in conftest.py.
 
 This test verifies that our unique runtime_mode swap functionality works
 correctly. Our conftest.py uses runtime_swap() to allow tests to run against
-either the package (src/apathetic_utils) or the stitched script
-(dist/apathetic_utils.py) based on the RUNTIME_MODE environment variable.
+either the package (src/<package>) or the stitched
+script (dist/<package>.py) based on the RUNTIME_MODE environment variable.
 
 Verifies:
-  - When RUNTIME_MODE=stitched: All modules resolve to dist/apathetic_utils.py
-  - When RUNTIME_MODE is unset (package): All modules resolve to src/apathetic_utils/
+  - When RUNTIME_MODE=stitched: All modules resolve to dist/<package>.py
+  - When RUNTIME_MODE is unset (package): All modules resolve to src/<package>/
   - Python's import cache (sys.modules) points to the correct sources
   - All submodules load from the expected location
 
@@ -22,28 +22,19 @@ import pkgutil
 import sys
 from pathlib import Path
 
-import apathetic_logging as mod_logging
-import apathetic_utils.runtime as amod_utils_runtime
+import apathetic_logging as alib_logging
+import apathetic_utils as alib_utils
 import pytest
 
-# Import a module from the main package to test
-import apathetic_schema as amod_schema
+import apathetic_schema as app_package
 from tests.utils import PROGRAM_PACKAGE, PROGRAM_SCRIPT, PROJ_ROOT
 
-
-# --- convenience -----------------------------------------------------------
-
-_runtime = amod_utils_runtime.ApatheticUtils_Internal_Runtime
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-safe_trace = mod_logging.makeSafeTrace("🪞")
-
-# Debug: show which apathetic_logging module we're using in the test
-mod_logging_source = getattr(mod_logging, "__file__", "unknown")
-safe_trace(f"🔍 test: Using apathetic_logging from: {mod_logging_source}")
+safe_trace = alib_logging.makeSafeTrace("🪞")
 
 SRC_ROOT = PROJ_ROOT / "src"
 DIST_ROOT = PROJ_ROOT / "dist"
@@ -52,21 +43,13 @@ DIST_ROOT = PROJ_ROOT / "dist"
 def list_important_modules() -> list[str]:
     """Return all importable submodules under the package, if available."""
     important: list[str] = []
-    # Use the main package module (apathetic_schema.schema) to find package path
-    package_module = sys.modules.get(PROGRAM_PACKAGE)
-    if package_module is None:
-        # Fallback: try to get it from the schema module's parent
-        package_module = sys.modules.get(amod_schema.__name__.rsplit(".", 1)[0])
-
-    if package_module is None or not hasattr(package_module, "__path__"):
-        safe_trace("pkgutil.walk_packages skipped — stitched runtime (no __path__)")
-        # Add the main package and schema module
-        important.append(PROGRAM_PACKAGE)
-        important.append(amod_schema.__name__)
+    if not hasattr(app_package, "__path__"):
+        safe_trace("pkgutil.walk_packages skipped — stitched mode (no __path__)")
+        important.append(app_package.__name__)
     else:
         for _, name, _ in pkgutil.walk_packages(
-            package_module.__path__,
-            PROGRAM_PACKAGE + ".",
+            app_package.__path__,
+            app_package.__name__ + ".",
         ):
             important.append(name)
 
@@ -108,132 +91,13 @@ def dump_snapshot(*, include_full: bool = False) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _get_runtime_module_file() -> str:
-    """Get the file path for a module from the main package based on RUNTIME_MODE."""
-    mode = os.getenv("RUNTIME_MODE", "unknown")
-    # Use a module from the main package (apathetic_schema.schema)
-    # In stitched mode, get the module from sys.modules to ensure we're using
-    # the version from the stitched script (which was loaded by runtime_swap)
-    # rather than the one imported at the top of this file (which might be from
-    # the package if it was imported before runtime_swap ran)
-    schema_module_name = amod_schema.__name__
-    if mode == "stitched" and schema_module_name in sys.modules:
-        # Use the module from sys.modules, which should be from the stitched script
-        schema_module_actual = sys.modules[schema_module_name]
-        # Check __file__ directly - for stitched modules, should point to
-        # dist/apathetic_schema.py
-        schema_file_path = getattr(schema_module_actual, "__file__", None)
-        if schema_file_path:
-            return str(schema_file_path)
-        # Fall back to inspect.getsourcefile if __file__ is not available
-        return str(inspect.getsourcefile(schema_module_actual) or "")
-    # Otherwise, use the module imported at the top of the file
-    return str(inspect.getsourcefile(amod_schema))
-
-
-def _verify_stitched_mode(
-    runtime_mode: str,
-    expected_script: Path,
-    utils_file: str,
-) -> None:
-    """Verify stitched mode expectations."""
-    # what does the module itself think?
-    assert runtime_mode == "stitched", (
-        f"Expected runtime_mode='stitched' but got '{runtime_mode}'"
-    )
-
-    # exists
-    assert expected_script.exists(), f"Expected stitched script at {expected_script}"
-
-    # path peeks - in stitched mode, modules might be imported from
-    # the package, but they should still detect stitched mode
-    # correctly via detect_runtime_mode()
-    # So we only check the path if the module is actually from dist/
-    if utils_file.startswith(str(DIST_ROOT)):
-        # Module is from stitched script, verify it's the right file
-        assert Path(utils_file).samefile(expected_script), (
-            f"{utils_file} should be same file as {expected_script}"
-        )
-    else:
-        # Module is from package, but that's OK as long as
-        # detect_runtime_mode() correctly returns "stitched"
-        safe_trace(
-            f"Note: {amod_schema.__name__} loaded from package "
-            f"({utils_file}), but runtime_mode correctly detected as 'stitched'",
-        )
-
-    # troubleshooting info
-    safe_trace(
-        f"sys.modules['{PROGRAM_PACKAGE}'] = {sys.modules.get(PROGRAM_PACKAGE)}",
-    )
-    schema_module_name = amod_schema.__name__
-    safe_trace(
-        f"sys.modules['{schema_module_name}'] = {sys.modules.get(schema_module_name)}",
-    )
-
-
-def _verify_package_mode(runtime_mode: str, utils_file: str) -> None:
-    """Verify package mode expectations."""
-    # what does the module itself think?
-    assert runtime_mode != "stitched"
-
-    # path peeks - in package mode, modules might be imported from
-    # the package (virtualenv site-packages), but they should
-    # still detect package mode correctly via detect_runtime_mode()
-    # So we only check the path if the module is actually from src/
-    if utils_file.startswith(str(SRC_ROOT)):
-        # Module is from source, verify it's in the right location
-        assert Path(utils_file).is_relative_to(SRC_ROOT), (
-            f"{utils_file} should be relative to {SRC_ROOT}"
-        )
-    else:
-        # Module is from package, but that's OK as long as
-        # detect_runtime_mode() correctly returns non-stitched mode
-        safe_trace(
-            f"Note: {amod_schema.__name__} loaded from package "
-            f"({utils_file}), but runtime_mode correctly detected as "
-            f"'{runtime_mode}' (not 'stitched')",
-        )
-
-
-def _verify_submodules(mode: str, expected_script: Path, runtime_mode: str) -> None:
-    """Verify all submodules are loaded from the expected location."""
-    important_modules = list_important_modules()
-    # Only check modules that are part of PROGRAM_PACKAGE (not dependencies)
-    for submodule in important_modules:
-        is_package_module = (
-            submodule.startswith(PROGRAM_PACKAGE + ".") or submodule == PROGRAM_PACKAGE
-        )
-        if not is_package_module:
-            # Skip dependencies that aren't part of the main package
-            continue
-        mod = importlib.import_module(f"{submodule}")
-        path = Path(inspect.getsourcefile(mod) or "")
-        if mode == "stitched":
-            assert path.samefile(expected_script), f"{submodule} loaded from {path}"
-        # In package mode, modules might be from src/ (editable install)
-        # or from package (regular install). Both are acceptable
-        # as long as detect_runtime_mode() correctly identifies non-stitched mode.
-        elif not path.is_relative_to(SRC_ROOT):
-            # Module is from package, verify it's not from dist/
-            assert not path.samefile(expected_script), (
-                f"{submodule} should not be from stitched script in "
-                f"package mode: {path}"
-            )
-            safe_trace(
-                f"Note: {submodule} loaded from package ({path}), "
-                f"but runtime_mode correctly detected as '{runtime_mode}' "
-                f"(not 'stitched')",
-            )
-
-
-def test_pytest_runtime_cache_integrity() -> None:
+def test_pytest_runtime_cache_integrity() -> None:  # noqa: PLR0912, PLR0915
     """Verify runtime mode swap correctly loads modules from expected locations.
 
     Ensures that modules imported at the top of test files resolve to the
     correct source based on RUNTIME_MODE:
-    - stitched mode: All modules must load from dist/apathetic_schema.py
-    - package mode: All modules must load from src/apathetic_schema/
+    - stitched mode: All modules must load from dist/<package>.py
+    - package mode: All modules must load from src/<package>/
 
     Also verifies that Python's import cache (sys.modules) doesn't have stale
     references pointing to the wrong runtime.
@@ -241,24 +105,115 @@ def test_pytest_runtime_cache_integrity() -> None:
     # --- setup ---
     mode = os.getenv("RUNTIME_MODE", "unknown")
     expected_script = DIST_ROOT / f"{PROGRAM_SCRIPT}.py"
-    utils_file = _get_runtime_module_file()
 
+    # In stitched mode, get the module from sys.modules to ensure we're using
+    # the version from the stitched script (which was loaded by runtime_swap)
+    # rather than the one imported at the top of this file (which might be from
+    # the package if it was imported before runtime_swap ran)
+    if mode in ("stitched", "zipapp") and PROGRAM_PACKAGE in sys.modules:
+        # Use the module from sys.modules, which should be from the stitched
+        app_package_actual = sys.modules[PROGRAM_PACKAGE]
+        # Check __file__ directly - for stitched modules, should point to
+        # dist/<package>.py or dist/<package>.pyz
+        package_file_path = getattr(app_package_actual, "__file__", None)
+        if package_file_path:
+            package_file = str(package_file_path)
+        else:
+            # Fall back to inspect.getsourcefile if __file__ is not available
+            package_file = str(inspect.getsourcefile(app_package_actual) or "")
+    else:
+        # Otherwise, use the module imported at the top of the file
+        app_package_actual = app_package
+        package_file = str(inspect.getsourcefile(app_package_actual) or "")
     # --- execute ---
     safe_trace(f"RUNTIME_MODE={mode}")
-    safe_trace(f"{amod_schema.__name__}  → {utils_file}")
+    safe_trace(f"{PROGRAM_PACKAGE}  → {package_file}")
 
     if os.getenv("TRACE"):
         dump_snapshot()
     # Access via main module to get the function from the namespace class
-    runtime_mode = _runtime.detect_runtime_mode(PROGRAM_PACKAGE)
+    runtime_mode = alib_utils.detect_runtime_mode(package_name=PROGRAM_PACKAGE)
 
     if mode == "stitched":
-        _verify_stitched_mode(runtime_mode, expected_script, utils_file)
+        # --- verify stitched ---
+        # what does the module itself think?
+        assert runtime_mode == "stitched", (
+            f"Expected runtime_mode='stitched' but got '{runtime_mode}'"
+        )
+
+        # exists
+        assert expected_script.exists(), (
+            f"Expected stitched script at {expected_script}"
+        )
+
+        # path peeks - in stitched mode, the package module might be
+        # imported from the package, but it should still detect
+        # stitched mode correctly via sys.modules.get(PROGRAM_PACKAGE)
+        # So we only check the path if the module is actually from dist/
+        if package_file.startswith(str(DIST_ROOT)):
+            # Module is from stitched script, verify it's the right file
+            assert Path(package_file).samefile(expected_script), (
+                f"{package_file} should be same file as {expected_script}"
+            )
+        else:
+            # Module is from package, but that's OK as long as
+            # detect_runtime_mode() correctly returns "stitched"
+            safe_trace(
+                f"Note: {PROGRAM_PACKAGE} loaded from package "
+                f"({package_file}), but runtime_mode correctly detected as 'stitched'"
+            )
+
+        # troubleshooting info
+        safe_trace(
+            f"sys.modules['{PROGRAM_PACKAGE}'] = {sys.modules.get(PROGRAM_PACKAGE)}",
+        )
+
     else:
-        _verify_package_mode(runtime_mode, utils_file)
+        # --- verify module ---
+        # what does the module itself think?
+        assert runtime_mode != "stitched"
+
+        # path peeks
+        if mode == "zipapp":
+            # In zipapp mode, module should be from the zipapp
+            expected_zipapp = DIST_ROOT / f"{PROGRAM_SCRIPT}.pyz"
+            assert package_file is not None, (
+                "package_file should not be None in zipapp mode"
+            )
+            assert str(expected_zipapp) in str(package_file), (
+                f"{package_file} not from zipapp {expected_zipapp}"
+            )
+        else:
+            # In package mode, module should be from src/
+            assert package_file is not None, (
+                "package_file should not be None in package mode"
+            )
+            assert package_file.startswith(str(SRC_ROOT)), f"{package_file} not in src/"
 
     # --- verify both ---
-    _verify_submodules(mode, expected_script, runtime_mode)
+    important_modules = list_important_modules()
+    for submodule in important_modules:
+        mod = importlib.import_module(f"{submodule}")
+        # For zipapp modules, inspect.getsourcefile() may not work,
+        # so use __file__ directly
+        if mode == "zipapp":
+            mod_file = getattr(mod, "__file__", None)
+            if mod_file:
+                path = Path(mod_file)
+            else:
+                path = Path(inspect.getsourcefile(mod) or "")
+        else:
+            path = Path(inspect.getsourcefile(mod) or "")
+        if mode == "stitched":
+            assert path.samefile(expected_script), f"{submodule} loaded from {path}"
+        elif mode == "zipapp":
+            # In zipapp mode, modules should be from the zipapp
+            expected_zipapp = DIST_ROOT / f"{PROGRAM_SCRIPT}.pyz"
+            assert str(expected_zipapp) in str(path), (
+                f"{submodule} not from zipapp: {path}"
+            )
+        else:
+            assert path.is_relative_to(SRC_ROOT), f"{submodule} not in src/: {path}"
 
 
 @pytest.mark.debug

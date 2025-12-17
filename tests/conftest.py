@@ -2,106 +2,71 @@
 """Shared test setup for project.
 
 Each pytest run now targets a single runtime mode:
-- Package mode (default): uses src/apathetic_schema
-- Stitched mode: uses dist/apathetic_schema.py when RUNTIME_MODE=stitched
-- Zipapp mode: uses dist/apathetic_schema.pyz when RUNTIME_MODE=zipapp
+- Package mode (default): uses src/<package> when RUNTIME_MODE=package
+- Stitched mode: uses dist/<package>.py when RUNTIME_MODE=stitched
+- Zipapp mode: uses dist/<package>.pyz when RUNTIME_MODE=zipapp
 
 Switch mode with: RUNTIME_MODE=stitched pytest or RUNTIME_MODE=zipapp pytest
 """
 
-import logging
 import os
-import sys
 from collections.abc import Generator
 
-import apathetic_utils
+import apathetic_logging as alib_logging
+import apathetic_utils as alib_utils
 import pytest
 
-from tests.utils.constants import (
+from tests.utils import (
+    DEFAULT_TEST_LOG_LEVEL,
     PROGRAM_PACKAGE,
     PROGRAM_SCRIPT,
     PROJ_ROOT,
 )
 
 
-# early jank hook - must run before importing apathetic_logging
-# so we get the stitched version if in stitched/zipapp mode
-apathetic_utils.runtime_swap(
+# early jank hook, must happen before importing the <package>
+# so we get the stitched/zipapp version in the right mode
+alib_utils.runtime_swap(
     root=PROJ_ROOT,
     package_name=PROGRAM_PACKAGE,
     script_name=PROGRAM_SCRIPT,
 )
 
-# Import apathetic_logging AFTER runtime_swap so we get the correct version
-# In stitched builds, apathetic_logging is registered in sys.modules
-# by the stitched file. In package mode, we import it normally.
-if "apathetic_logging" in sys.modules:
-    # Use the version from sys.modules (could be stitched or package)
-    import apathetic_logging as mod_logging
-
-    mod_logging_source = getattr(
-        sys.modules["apathetic_logging"],
-        "__file__",
-        "unknown",
-    )
-    was_in_sys_modules = True
-else:
-    # Not in sys.modules yet, import normally
-    import apathetic_logging as mod_logging
-
-    mod_logging_source = getattr(mod_logging, "__file__", "unknown")
-    was_in_sys_modules = False
-
-safe_trace = mod_logging.makeSafeTrace("⚡️")
-
-# Debug: show which apathetic_logging module we're using
-if was_in_sys_modules:
-    safe_trace(
-        f"🔍 conftest: Using apathetic_logging from sys.modules: {mod_logging_source}",
-    )
-else:
-    safe_trace(
-        f"🔍 conftest: Imported apathetic_logging normally: {mod_logging_source}",
-    )
-
-# Register a logger name so getLogger() returns a named logger (not root)
-# This ensures getLogger() returns a Logger instance with trace method
-mod_logging.registerLogger(PROGRAM_PACKAGE)
-safe_trace(
-    f"🔍 conftest: Registered logger '{PROGRAM_PACKAGE}' "
-    f"using apathetic_logging from: {mod_logging_source}",
+from tests.utils import (  # noqa: E402
+    direct_logger,
+    module_logger,
 )
 
 
+# These fixtures are intentionally re-exported so pytest can discover them.
+__all__ = [
+    "direct_logger",
+    "module_logger",
+]
+
+safe_trace = alib_logging.makeSafeTrace("⚡️")
+
+
+# ----------------------------------------------------------------------
+# Fixtures
+# ----------------------------------------------------------------------
+
+
 @pytest.fixture(autouse=True)
-def reset_logger_class() -> Generator[None, None, None]:
-    """Reset logger class before and after each test for isolation.
+def reset_logger_level() -> Generator[None, None, None]:
+    """Reset logger level to default (INFO) before each test for isolation.
 
-    This ensures that any logging state changes in tests don't affect
-    subsequent tests. Only needed if tests use logging functionality.
+    In stitched mode, the logger is a module-level singleton that persists
+    between tests. This fixture ensures the logger level is reset to INFO
+    (the default) before each test, preventing test interference.
     """
-    # Save original state
-    original_logger_class = logging.getLoggerClass()
-
-    # Clear any existing loggers
-    logger_names = list(logging.Logger.manager.loggerDict.keys())
-    for logger_name in logger_names:
-        mod_logging.removeLogger(logger_name)
-
-    # Reset to defaults before test
-    logging.setLoggerClass(mod_logging.Logger)
-    mod_logging.Logger.extendLoggingModule()
-
+    # Get the app logger and reset to default level
+    logger = alib_logging.getLogger()
+    # Reset to INFO (default) - this ensures tests start with a known state
+    logger.setLevel(DEFAULT_TEST_LOG_LEVEL)
     yield
-
-    # Clear loggers again after test
-    logger_names = list(logging.Logger.manager.loggerDict.keys())
-    for logger_name in logger_names:
-        mod_logging.removeLogger(logger_name)
-
-    # Restore original state after test
-    logging.setLoggerClass(original_logger_class)
-    mod_logging.Logger.extendLoggingModule()
+    # After test, reset again to ensure clean state for next test
+    logger.setLevel(DEFAULT_TEST_LOG_LEVEL)
 
 
 # ----------------------------------------------------------------------
@@ -125,7 +90,9 @@ def _filter_debug_tests(
         return  # user explicitly requested them, don't skip
 
     for item in items:
-        if "debug" in item.keywords:
+        # Check for the actual @pytest.mark.debug marker, not just "debug" in keywords
+        # (parametrized values can add "debug" to keywords, causing false positives)
+        if item.get_closest_marker("debug") is not None:
             item.add_marker(
                 pytest.mark.skip(reason="Skipped debug test (use -k debug to run)"),
             )

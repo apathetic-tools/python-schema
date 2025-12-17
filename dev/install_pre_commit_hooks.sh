@@ -7,4 +7,3 @@ if [ ! -f .git/hooks/pre-commit ] || ! grep -q 'pre-commit' .git/hooks/pre-commi
     poetry run pre-commit install --hook-type pre-push
 fi
 
-

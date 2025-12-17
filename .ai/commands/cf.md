@@ -7,4 +7,3 @@ Alias of `checkfix` command.
 3. Iterate until exit code 0
 4. Fix ALL errors, even if unrelated to current changes. CI fails on any remaining errors
 5. If stuck/unsure, stop and ask user, don't guess
-

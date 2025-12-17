@@ -1,11 +1,13 @@
-# tests/00_tooling/test_lint__no_from_app_imports.py
-"""Custom lint rule: Enforce `import ... as mod_*` pattern in tests.
+# tests/10_lint/test_lint__no_from_app_imports.py
+"""Custom lint rule: Enforce `import <mod> as mod_<mod>` pattern in tests.
 
 This test acts as a "poor person's linter" since we can't create custom ruff rules yet.
-It enforces that ALL test files use `import ... as mod_*` format (no `from ... import`).
+It enforces that ALL test files use
+`import <package>.<module> as mod_<module>` format
+instead of `from <package>.<module> import ...` when importing from our project.
 
 CRITICAL: This rule applies to ALL imports from our project, including private
-functions (those starting with _). There are NO exceptions.
+functions (those starting with _). There are NO exceptions (except TYPE_CHECKING).
 
 Disallowed patterns:
 - `from <package>.<module> import ...` - Use
@@ -17,28 +19,22 @@ Allowed patterns:
 
 Why this matters:
 - runtime_swap: Tests can run against either package or stitched
-  script. The `import ... as mod_*` pattern ensures module objects are available
-  for runtime swapping. `from ... import` breaks this because imported items
-  are no longer associated with their module object.
+  script. The `import ... as mod_*` pattern ensures the module object
+  is available for runtime swapping. `from ... import` breaks this
+  because imported items are no longer associated with their module object.
 - patch_everywhere: Predictive patching requires module objects to be available
   at the module level. Using `from ... import` breaks this because the imported
   function is no longer associated with its module object.
 
-If you need to test private functions, import the submodule and access via
-the module object: `mod_validate.ApatheticSchema_Internal_ValidateTypedDict._method()`.
+If you need to test private functions, import the module and access the function
+via the module object: `mod_utils._private_function()` instead of importing
+the function directly.
 """
 
 import ast
 from pathlib import Path
 
-
-# Package names that are disallowed from `from ... import` statements in tests
-# All imports from these packages must use `import ... as mod_*` format
-DISALLOWED_PACKAGES = [
-    "apathetic_utils",
-    "apathetic_schema",
-    "apathetic_logging",
-]
+from tests.utils import DISALLOWED_PACKAGES
 
 
 class ImportChecker(ast.NodeVisitor):
@@ -75,7 +71,8 @@ class ImportChecker(ast.NodeVisitor):
 
 
 def test_no_app_from_imports() -> None:
-    """Enforce `import ... as mod_*` pattern (no `from ... import`) for project imports.
+    """Enforce `import <mod> as mod_<mod>` pattern (no `from ... import`)
+    for project imports.
 
     This is a custom lint rule implemented as a pytest test because we can't
     create custom ruff rules yet. It ensures all test files use module-level
@@ -96,27 +93,28 @@ def test_no_app_from_imports() -> None:
     tests_dir = Path(__file__).parents[1]  # tests/ directory (not project root)
     bad_files: list[Path] = []
 
-    for path in tests_dir.rglob("test_*.py"):
+    for path in tests_dir.rglob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         checker = ImportChecker()
         checker.visit(tree)
         if checker.bad_imports:
             # NO EXCEPTIONS (except TYPE_CHECKING): All imports from our
-            # project must use `import ... as mod_*` format, not `from ... import`.
-            # This includes private functions - access via module objects.
+            # project must use module-level imports. This includes private
+            # functions - use mod_module._private_function() instead
             bad_files.append(path)
 
     if bad_files:
         packages_str = ", ".join(DISALLOWED_PACKAGES)
         print(
-            "\n❌ Disallowed imports from disallowed packages found in test files:",
+            "\n❌ Disallowed `from <package>.<module> import ...`"
+            " imports found in test files:",
         )
         print(f"   Disallowed packages: {packages_str}")
         for path in bad_files:
             print(f"  - {path}")
         example_pkg = DISALLOWED_PACKAGES[0]
         print(
-            "\nAll test files MUST use `import ... as mod_*` format"
+            "\nAll test files MUST use module-level imports:"
             " (no `from ... import`):"
             f"\n  ❌ from {example_pkg}.module import function"
             f"\n  ✅ import {example_pkg} as amod_{example_pkg.split('_')[-1]}"
@@ -127,9 +125,12 @@ def test_no_app_from_imports() -> None:
             f"\n  ✅ mod_module.Class.method()"
             "\n"
             "\nThis pattern is required for:"
-            "\n  - runtime_swap: Module objects needed for runtime mode switching."
-            "\n  - patch_everywhere: Predictive patching requires module objects to be"
-            " available at the module level.",
+            "\n  - runtime_swap: Module objects needed for runtime mode switching"
+            "\n  - patch_everywhere: Predictive patching requires module-level access"
+            "\n"
+            "\nFor private functions, access via module object:"
+            "\n  ✅ mod_module._private_function()"
+            "\n  ❌ from module import _private_function"
         )
         xmsg = (
             f"{len(bad_files)} test file(s) use disallowed"

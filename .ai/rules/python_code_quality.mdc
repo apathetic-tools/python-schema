@@ -1,0 +1,49 @@
+---
+description: Python Code quality standards and conventions
+globs:
+  - "**/*.py"
+alwaysApply: false
+---
+
+# Python Code Quality
+
+Does not apply to generated or externally sourced code `dist/`, `bin/`.
+
+
+## Line Length
+
+Max 88 chars (Ruff enforced). **Always fix violations; never ignore.**
+
+**Principle**: Prioritize readability over meeting the limit.
+
+**Comments/Strings**: Don't shorten if it hurts readability. Split across lines instead:
+```python
+# Validate user input before processing to ensure data integrity
+# and prevent security vulnerabilities.
+
+error_message = (
+    "Failed to validate user input. Please check the format "
+    "and ensure all required fields are present."
+)
+```
+
+**Inline statements** (ternaries, comprehensions, generators): Wrap across lines or refactor to explicit if/else/loops for complex cases.
+
+## Python Version
+
+**Minimum**: Python 3.10. All code must work on 3.10.
+
+**Newer features**: Use 3.11+ features if supported on both versions via:
+- `from __future__` imports
+- `typing_extensions`
+- Backported implementations
+
+**Backporting**: Encapsulate version differences in functions. Document clearly. Examples: `fnmatch_portable()`, `load_toml()`. Limit: ~few hundred lines max. If too large/complex, ask developer.
+
+### Checks and Tests
+
+**Requirement**: `poetry run poe check:fix` must pass completely before finishing work. Runs: formatting, linting, type checking, tests (both installed and singlefile runtimes). **CI blocks pushes until this passes.**
+
+**Commands**: `poetry run poe check:fix` (main), `check`, `fix`, `lint`, `typecheck`, `test`. Individual: `lint:ruff`, `fix:ruff:installed`, `fix:format:installed`, `typecheck:mypy`, `typecheck:pyright`, `test:pytest:installed`, `test:pytest:script`.
+
+**Single files**: `ruff format/check/check --fix <file>`, `pytest <file>::<test>` (add `RUNTIME_MODE=singlefile` for singlefile mode).

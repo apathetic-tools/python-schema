@@ -33,7 +33,7 @@ done
 
 # Fallback to plain python3 if no versioned one found
 if [ -z "$PYTHON_PATH" ]; then
-  CMD_PATH=$(command -v python3 2>/dev/null)
+  CMD_PATH=$(command -v python3 2>/dev/null || true)
   if [ -n "$CMD_PATH" ] && ! echo "$CMD_PATH" | grep -qE "(mise|\.mise)"; then
     if "$CMD_PATH" --version 2>&1 | grep -q "3\."; then
       PYTHON_PATH="$CMD_PATH"
@@ -48,32 +48,38 @@ if [ -n "$PYTHON_PATH" ]; then
 elif command -v mise >/dev/null 2>&1; then
   HIGHEST_MISE_MINOR=0
   HIGHEST_MISE_PYTHON=""
-  
-  # Try to find highest Python version via mise
+
+  # Try to find highest Python version via mise (check in standard mise install locations)
   for MINOR in $(seq 20 -1 10); do
-    MISE_PYTHON=$(mise which "python3.$MINOR" 2>/dev/null || true)
-    if [ -n "$MISE_PYTHON" ] && [ -x "$MISE_PYTHON" ]; then
-      HIGHEST_MISE_MINOR=$MINOR
-      HIGHEST_MISE_PYTHON="$MISE_PYTHON"
-      break
-    fi
+    for MISE_BASE in "${HOME}/.local/share/mise" "${HOME}/.mise"; do
+      if [ -x "$MISE_BASE/installs/python/3.$MINOR/bin/python3.$MINOR" ]; then
+        HIGHEST_MISE_MINOR=$MINOR
+        HIGHEST_MISE_PYTHON="$MISE_BASE/installs/python/3.$MINOR/bin/python3.$MINOR"
+        break 2
+      fi
+    done
   done
-  
-  # If no versioned Python found, try plain python3
+
+  # If no versioned Python found, try plain python3 symlink in mise
   if [ -z "$HIGHEST_MISE_PYTHON" ]; then
-    HIGHEST_MISE_PYTHON=$(mise which python3 2>/dev/null || true)
+    for MISE_BASE in "${HOME}/.local/share/mise" "${HOME}/.mise"; do
+      if [ -x "$MISE_BASE/installs/python/bin/python3" ]; then
+        HIGHEST_MISE_PYTHON="$MISE_BASE/installs/python/bin/python3"
+        break
+      fi
+    done
   fi
-  
+
   if [ -n "$HIGHEST_MISE_PYTHON" ] && [ -x "$HIGHEST_MISE_PYTHON" ]; then
     poetry env use "$HIGHEST_MISE_PYTHON" && poetry install
   else
-    echo "❌ No Python 3.x version found via mise."
-    echo "   Install with: mise install python@3.12"
-    echo "   Or run: poetry run poe setup:python:check"
+    echo "❌ No Python 3.x version found via mise." >&2
+    echo "   Install with: mise install python@3.12" >&2
+    echo "   Or run: poetry run poe setup:python:check" >&2
     exit 1
   fi
 else
-  echo "❌ No Python 3.x version found. Please install Python 3.10 or newer."
+  echo "❌ No Python 3.x version found. Please install Python 3.10 or newer." >&2
   exit 1
 fi
 

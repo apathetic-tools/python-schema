@@ -18,7 +18,7 @@ The `test` log level is the most verbose and bypasses pytest's log capture, allo
 
 **Usage:**
 ```bash
-LOG_LEVEL=test poetry run poe test:pytest:installed tests/path/to/test.py::test_name -xvs
+LOG_LEVEL=test poetry run poe test:pytest:package tests/path/to/test.py::test_name -xvs
 ```
 
 **What it does:**
@@ -132,12 +132,12 @@ Enable `safe_trace()` output by setting the `SAFE_TRACE` environment variable. T
 
 **Usage:**
 ```bash
-SAFE_TRACE=1 poetry run poe test:pytest:installed tests/path/to/test.py::test_name -xvs
+SAFE_TRACE=1 poetry run poe test:pytest:package tests/path/to/test.py::test_name -xvs
 ```
 
 **Combined with LOG_LEVEL=test:**
 ```bash
-LOG_LEVEL=test SAFE_TRACE=1 poetry run poe test:pytest:installed tests/path/to/test.py::test_name -xvs
+LOG_LEVEL=test SAFE_TRACE=1 poetry run poe test:pytest:package tests/path/to/test.py::test_name -xvs
 ```
 
 **What it does:**
@@ -158,7 +158,7 @@ LOG_LEVEL=test SAFE_TRACE=1 poetry run poe test:pytest:installed tests/path/to/t
 
 2. **If standard debugging isn't enough, try LOG_LEVEL=test**
    ```bash
-   LOG_LEVEL=test poetry run poe test:pytest:installed tests/path/to/test.py::test_name -xvs
+   LOG_LEVEL=test poetry run poe test:pytest:package tests/path/to/test.py::test_name -xvs
    ```
    - This often reveals hidden logging output
 
@@ -174,7 +174,7 @@ LOG_LEVEL=test SAFE_TRACE=1 poetry run poe test:pytest:installed tests/path/to/t
 
 5. **Combine techniques for maximum visibility**
    ```bash
-   LOG_LEVEL=test SAFE_TRACE=1 poetry run poe test:pytest:installed tests/path/to/test.py::test_name -xvs
+   LOG_LEVEL=test SAFE_TRACE=1 poetry run poe test:pytest:package tests/path/to/test.py::test_name -xvs
    ```
 
 ## Common Scenarios
