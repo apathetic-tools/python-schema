@@ -117,7 +117,7 @@ def test_serger_build_with_sample_code_is_deterministic(
 # ============================================================================
 
 
-def test_serger_build_is_deterministic() -> None:
+def test_serger_build_is_deterministic(tmp_path: Path) -> None:
     """Test that two serger builds of the project produce identical output.
 
     This test:
@@ -128,64 +128,61 @@ def test_serger_build_is_deterministic() -> None:
     # --- setup ---
     config_file = PROJ_ROOT / ".serger.jsonc"
 
-    # Use temp directories for builds
-    with tempfile.TemporaryDirectory() as build_dir1:
-        build_path1 = Path(build_dir1)
-        output_file1 = build_path1 / "apathetic_utils.py"
+    # Use pytest's tmp_path to avoid race conditions in parallel test execution
+    test_id = id(test_serger_build_is_deterministic)
+    output_file1 = tmp_path / f"apathetic_schema_{test_id}_1.py"
 
-        # --- execute: first build with disable_build_timestamp ---
-        result1 = subprocess.run(  # noqa: S603
-            [
-                sys.executable,
-                "-m",
-                "serger.__main__",
-                "--config",
-                str(config_file),
-                "--disable-build-timestamp",
-                "--out",
-                str(output_file1),
-            ],
-            cwd=PROJ_ROOT,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        assert result1.returncode == 0, (
-            f"First build failed: {result1.stdout}\n{result1.stderr}"
-        )
-        assert output_file1.exists(), "First build output file not created"
+    # --- execute: first build with disable_build_timestamp ---
+    result1 = subprocess.run(  # noqa: S603
+        [
+            sys.executable,
+            "-m",
+            "serger.__main__",
+            "--config",
+            str(config_file),
+            "--disable-build-timestamp",
+            "--out",
+            str(output_file1),
+        ],
+        cwd=PROJ_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result1.returncode == 0, (
+        f"First build failed: {result1.stdout}\n{result1.stderr}"
+    )
+    assert output_file1.exists(), "First build output file not created"
 
-        # --- execute: second build with disable_build_timestamp ---
-        with tempfile.TemporaryDirectory() as build_dir2:
-            build_path2 = Path(build_dir2)
-            output_file2 = build_path2 / "apathetic_utils.py"
+    # --- execute: second build with disable_build_timestamp ---
+    output_file2 = tmp_path / f"apathetic_schema_{test_id}_2.py"
 
-            result2 = subprocess.run(  # noqa: S603
-                [
-                    sys.executable,
-                    "-m",
-                    "serger.__main__",
-                    "--config",
-                    str(config_file),
-                    "--disable-build-timestamp",
-                    "--out",
-                    str(output_file2),
-                ],
-                cwd=PROJ_ROOT,
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            assert result2.returncode == 0, (
-                f"Second build failed: {result2.stdout}\n{result2.stderr}"
-            )
-            assert output_file2.exists(), "Second build output file not created"
+    result2 = subprocess.run(  # noqa: S603
+        [
+            sys.executable,
+            "-m",
+            "serger.__main__",
+            "--config",
+            str(config_file),
+            "--disable-build-timestamp",
+            "--out",
+            str(output_file2),
+        ],
+        cwd=PROJ_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result2.returncode == 0, (
+        f"Second build failed: {result2.stdout}\n{result2.stderr}"
+    )
+    assert output_file2.exists(), "Second build output file not created"
 
-            # --- verify: outputs are identical ---
-            content1 = output_file1.read_bytes()
-            content2 = output_file2.read_bytes()
-            assert content1 == content2, (
-                "Two builds of the project with --disable-build-timestamp should "
-                "produce identical output. This ensures reproducible builds of "
-                "our actual code."
-            )
+    # --- verify: outputs are identical ---
+    content1 = output_file1.read_bytes()
+    content2 = output_file2.read_bytes()
+    assert content1 == content2, (
+        "Two builds of the project with --disable-build-timestamp should "
+        "produce identical output. This ensures reproducible builds of "
+        "our actual code."
+    )

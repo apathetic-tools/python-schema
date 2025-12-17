@@ -20,14 +20,14 @@ import importlib
 import subprocess
 import sys
 import zipfile
+from pathlib import Path
 
 import pytest
 
 from tests.utils.constants import PROGRAM_PACKAGE, PROGRAM_SCRIPT, PROJ_ROOT
 
 
-@pytest.mark.skip(reason="Will re-enable once zipbundler is fully integrated")
-def test_zipapp_import_semantics() -> None:
+def test_zipapp_import_semantics(tmp_path: Path) -> None:
     """Test that zipapp builds maintain correct import semantics.
 
     This test verifies our project code works correctly when built with zipbundler:
@@ -39,11 +39,9 @@ def test_zipapp_import_semantics() -> None:
     This verifies our project configuration and code work correctly with zipbundler.
     """
     # --- setup ---
-    # Build the project's zipapp
-    zipapp_file = PROJ_ROOT / "dist" / f"{PROGRAM_SCRIPT}.pyz"
-
-    # Ensure dist directory exists
-    zipapp_file.parent.mkdir(parents=True, exist_ok=True)
+    # Use pytest's tmp_path to avoid race conditions in parallel test execution
+    test_id = id(test_zipapp_import_semantics)
+    zipapp_file = tmp_path / f"{PROGRAM_SCRIPT}_{test_id}.pyz"
 
     # --- execute: build zipapp ---
     zipapp_cmd = [sys.executable, "-m", "zipbundler"]
@@ -51,10 +49,9 @@ def test_zipapp_import_semantics() -> None:
         [
             *zipapp_cmd,
             "-c",
-            PROGRAM_PACKAGE,
             "-o",
             str(zipapp_file),
-            ".",
+            "src",
         ],
         cwd=PROJ_ROOT,
         capture_output=True,
@@ -85,22 +82,25 @@ def test_zipapp_import_semantics() -> None:
 
         # --- verify: import semantics ---
         # Verify that key exports from apathetic_schema are available
-        # In zipapp mode, __init__.py is included, so mixin classes are exported
-        assert hasattr(
-            zipapp_module,
-            "ApatheticSchema_Internal_CheckSchemaConformance",
-        ), (
-            f"{PROGRAM_PACKAGE}.ApatheticSchema_Internal_CheckSchemaConformance "
-            "should be available"
+        # In zipapp mode, __init__.py is included, so public API is exported
+        assert hasattr(zipapp_module, "apathetic_schema"), (
+            f"{PROGRAM_PACKAGE}.apathetic_schema should be available"
         )
         assert hasattr(zipapp_module, "ApatheticSchema_ValidationSummary"), (
             f"{PROGRAM_PACKAGE}.ApatheticSchema_ValidationSummary should be available"
         )
-        # Verify they are usable
+        # Verify the namespace class is usable
+        assert isinstance(zipapp_module.apathetic_schema, type), (
+            "apathetic_schema should be a class (namespace)"
+        )
+        # Verify key methods are available
         assert hasattr(
-            zipapp_module.ApatheticSchema_Internal_CheckSchemaConformance,
+            zipapp_module.apathetic_schema,
             "check_schema_conformance",
-        ), "check_schema_conformance should be available on mixin class"
+        ), "check_schema_conformance should be available on apathetic_schema class"
+        assert hasattr(zipapp_module, "check_schema_conformance"), (
+            "check_schema_conformance should be available as a direct export"
+        )
 
     finally:
         # Clean up sys.path

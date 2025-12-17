@@ -12,7 +12,6 @@ Tests zipbundler (zipapp .pyz) builds only.
 # Runtime mode: only run in zipapp mode
 __runtime_mode__ = "zipapp"
 
-import os
 import subprocess
 import sys
 import tempfile
@@ -29,7 +28,6 @@ from tests.utils.constants import PROJ_ROOT
 # ============================================================================
 
 
-@pytest.mark.skip(reason="Will re-enable once zipbundler is fully integrated")
 def test_zipapp_build_with_sample_code_is_deterministic(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -70,7 +68,7 @@ testpkg = "testpkg.module:main"
     result1 = subprocess.run(  # noqa: S603
         [
             *zipapp_cmd,
-            "-c",
+            "-m",
             "testpkg",
             "-o",
             "dist/testpkg.pyz",
@@ -101,7 +99,7 @@ testpkg = "testpkg.module:main"
         result2 = subprocess.run(  # noqa: S603
             [
                 *zipapp_cmd,
-                "-c",
+                "-m",
                 "testpkg",
                 "-o",
                 "dist/testpkg.pyz",
@@ -163,8 +161,7 @@ testpkg = "testpkg.module:main"
 # ============================================================================
 
 
-@pytest.mark.skip(reason="Will re-enable once zipbundler is fully integrated")
-def test_zipapp_build_produces_valid_file() -> None:
+def test_zipapp_build_produces_valid_file(tmp_path: Path) -> None:
     """Test that zipbundler creates a valid zipapp file for the project.
 
     This test:
@@ -174,10 +171,9 @@ def test_zipapp_build_produces_valid_file() -> None:
     This verifies our project configuration works correctly with zipbundler.
     """
     # --- setup ---
-    zipapp_file = PROJ_ROOT / "dist" / "apathetic_utils.pyz"
-
-    # Ensure dist directory exists
-    zipapp_file.parent.mkdir(parents=True, exist_ok=True)
+    # Use pytest's tmp_path to avoid race conditions in parallel test execution
+    test_id = id(test_zipapp_build_produces_valid_file)
+    zipapp_file = tmp_path / f"apathetic_schema_{test_id}.pyz"
 
     # --- execute: build zipapp ---
     zipapp_cmd = [sys.executable, "-m", "zipbundler"]
@@ -185,10 +181,9 @@ def test_zipapp_build_produces_valid_file() -> None:
         [
             *zipapp_cmd,
             "-c",
-            "apathetic_utils",
             "-o",
             str(zipapp_file),
-            ".",
+            "src",
         ],
         cwd=PROJ_ROOT,
         capture_output=True,
@@ -221,8 +216,7 @@ def test_zipapp_build_produces_valid_file() -> None:
     )
 
 
-@pytest.mark.skip(reason="Will re-enable once zipbundler is fully integrated")
-def test_zipapp_build_is_deterministic() -> None:
+def test_zipapp_build_is_deterministic(tmp_path: Path) -> None:
     """Test that two zipapp builds of the project produce identical output.
 
     This test:
@@ -235,26 +229,48 @@ def test_zipapp_build_is_deterministic() -> None:
     that file.
     """
     # --- setup ---
-    # Use a temporary directory with unique name for parallel execution
-    # Include worker ID if running in parallel to avoid conflicts
-    worker_id = os.getenv("PYTEST_XDIST_WORKER", "")
-    temp_suffix = f"_{worker_id}" if worker_id else ""
-    with tempfile.TemporaryDirectory(
-        suffix=temp_suffix,
-        prefix="test_zipapp_",
-    ) as temp_dir:
-        zipapp_file = Path(temp_dir) / "apathetic_utils.pyz"
+    # Use pytest's tmp_path to avoid race conditions in parallel test execution
+    test_id = id(test_zipapp_build_is_deterministic)
+    zipapp_file = tmp_path / f"apathetic_schema_{test_id}.pyz"
 
-        # --- execute: first build ---
-        zipapp_cmd = [sys.executable, "-m", "zipbundler"]
-        result1 = subprocess.run(  # noqa: S603
+    # --- execute: first build ---
+    zipapp_cmd = [sys.executable, "-m", "zipbundler"]
+    result1 = subprocess.run(  # noqa: S603
+        [
+            *zipapp_cmd,
+            "-c",
+            "-o",
+            str(zipapp_file),
+            "src",
+        ],
+        cwd=PROJ_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result1.returncode == 0, (
+        f"First zipapp build failed: {result1.stdout}\n{result1.stderr}"
+    )
+    assert zipapp_file.exists(), "First build output file not created"
+
+    # Extract first build to temp directory
+    with tempfile.TemporaryDirectory() as extract_dir1:
+        extract_path1 = Path(extract_dir1)
+        with zipfile.ZipFile(zipapp_file, "r") as zf1:
+            zf1.extractall(extract_path1)
+
+        # Delete the output file to force a fresh build
+        zipapp_file.unlink()
+
+        # --- execute: second build ---
+        result2 = subprocess.run(  # noqa: S603
             [
                 *zipapp_cmd,
                 "-c",
-                "apathetic_utils",
                 "-o",
                 str(zipapp_file),
-                ".",
+                "src",
             ],
             cwd=PROJ_ROOT,
             capture_output=True,
@@ -262,75 +278,45 @@ def test_zipapp_build_is_deterministic() -> None:
             check=False,
         )
 
-        assert result1.returncode == 0, (
-            f"First zipapp build failed: {result1.stdout}\n{result1.stderr}"
+        assert result2.returncode == 0, (
+            f"Second zipapp build failed: {result2.stdout}\n{result2.stderr}"
         )
-        assert zipapp_file.exists(), "First build output file not created"
+        assert zipapp_file.exists(), "Second build output file not created"
 
-        # Extract first build to temp directory
-        with tempfile.TemporaryDirectory() as extract_dir1:
-            extract_path1 = Path(extract_dir1)
-            with zipfile.ZipFile(zipapp_file, "r") as zf1:
-                zf1.extractall(extract_path1)
+        # Extract second build to temp directory
+        with tempfile.TemporaryDirectory() as extract_dir2:
+            extract_path2 = Path(extract_dir2)
+            with zipfile.ZipFile(zipapp_file, "r") as zf2:
+                zf2.extractall(extract_path2)
 
-            # Delete the output file to force a fresh build
-            zipapp_file.unlink()
-
-            # --- execute: second build ---
-            result2 = subprocess.run(  # noqa: S603
-                [
-                    *zipapp_cmd,
-                    "-c",
-                    "apathetic_utils",
-                    "-o",
-                    str(zipapp_file),
-                    ".",
-                ],
-                cwd=PROJ_ROOT,
-                capture_output=True,
-                text=True,
-                check=False,
+            # --- verify: same files and content (deterministic) ---
+            # Get all files from both extracts, excluding environment.json
+            files1 = sorted(
+                f.relative_to(extract_path1)
+                for f in extract_path1.rglob("*")
+                if f.is_file() and f.name != "environment.json"
+            )
+            files2 = sorted(
+                f.relative_to(extract_path2)
+                for f in extract_path2.rglob("*")
+                if f.is_file() and f.name != "environment.json"
             )
 
-            assert result2.returncode == 0, (
-                f"Second zipapp build failed: {result2.stdout}\n{result2.stderr}"
+            assert files1 == files2, (
+                "Two zipapp builds of the project should contain the same files "
+                "(excluding environment.json). "
+                f"First: {[str(f) for f in files1]}, "
+                f"Second: {[str(f) for f in files2]}"
             )
-            assert zipapp_file.exists(), "Second build output file not created"
 
-            # Extract second build to temp directory
-            with tempfile.TemporaryDirectory() as extract_dir2:
-                extract_path2 = Path(extract_dir2)
-                with zipfile.ZipFile(zipapp_file, "r") as zf2:
-                    zf2.extractall(extract_path2)
-
-                # --- verify: same files and content (deterministic) ---
-                # Get all files from both extracts, excluding environment.json
-                files1 = sorted(
-                    f.relative_to(extract_path1)
-                    for f in extract_path1.rglob("*")
-                    if f.is_file() and f.name != "environment.json"
+            # Compare file contents one at a time
+            for rel_path in files1:
+                file1 = extract_path1 / rel_path
+                file2 = extract_path2 / rel_path
+                content1 = file1.read_bytes()
+                content2 = file2.read_bytes()
+                assert content1 == content2, (
+                    f"File {rel_path} content differs between builds. "
+                    "Zipapp builds of our project should be deterministic "
+                    "(excluding environment.json)."
                 )
-                files2 = sorted(
-                    f.relative_to(extract_path2)
-                    for f in extract_path2.rglob("*")
-                    if f.is_file() and f.name != "environment.json"
-                )
-
-                assert files1 == files2, (
-                    "Two zipapp builds of the project should contain the same files "
-                    "(excluding environment.json). "
-                    f"First: {[str(f) for f in files1]}, "
-                    f"Second: {[str(f) for f in files2]}"
-                )
-
-                # Compare file contents one at a time
-                for rel_path in files1:
-                    file1 = extract_path1 / rel_path
-                    file2 = extract_path2 / rel_path
-                    content1 = file1.read_bytes()
-                    content2 = file2.read_bytes()
-                    assert content1 == content2, (
-                        f"File {rel_path} content differs between builds. "
-                        "Zipapp builds of our project should be deterministic "
-                        "(excluding environment.json)."
-                    )
