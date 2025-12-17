@@ -36,22 +36,6 @@ class MiniBuild(TypedDict):
     out: str
 
 
-def test_validate_typed_dict_accepts_dict() -> None:
-    # --- execute ---
-    result = ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
-        context="root",
-        val={"include": ["src"], "out": "dist"},
-        typedict_cls=MiniBuild,
-        strict=True,
-        summary=make_summary(),
-        prewarn=set(),
-        field_path="root",
-    )
-
-    # --- verify ---
-    assert isinstance(result, bool)
-
-
 def test_validate_typed_dict_rejects_non_dict() -> None:
     # --- setup ---
     summary = make_summary()
@@ -173,67 +157,29 @@ def test_validate_typed_dict_respects_prewarn() -> None:
     assert not any("dry_run" in m and "unknown key" in m for m in pool)
 
 
-def test_validate_typed_dict_field_examples_wildcard() -> None:
-    """Field examples should support wildcard pattern matching."""
-
-    # --- setup ---
-    class Config(TypedDict):  # pyright: ignore[reportUnusedClass]
-        watch_interval: int
-        watch_paths: list[str]
-
-    field_examples = {
-        "root.watch_*": "30",
-    }
-
+@pytest.mark.parametrize(
+    ("field_path", "field_examples", "expected"),
+    [
+        ("root.watch_interval", {"root.watch_*": "30"}, "30"),
+        ("root.unmatched_field", {"root.other_*": "value"}, None),
+        ("root.include", {"root.include": '["src"]', "root.out": '"dist"'}, '["src"]'),
+        ("root.out", {"root.include": '["src"]', "root.out": '"dist"'}, '"dist"'),
+    ],
+)
+def test_validate_typed_dict_field_examples_matching(
+    field_path: str,
+    field_examples: dict[str, str],
+    expected: str | None,
+) -> None:
+    """Field examples should support exact path and wildcard pattern matching."""
     # --- execute ---
-    # Should work, but we're testing that wildcard matching is used
-    # The example should be found via wildcard pattern
     example = ApatheticSchema_Internal_ValidateTypedDict._get_example_for_field(  # pyright: ignore[reportPrivateUsage]
-        "root.watch_interval",
+        field_path,
         field_examples,
     )
 
     # --- verify ---
-    assert example == "30"
-
-
-def test_validate_typed_dict_field_examples_no_match_returns_none() -> None:
-    """Field examples should return None when no match is found."""
-    # --- setup ---
-    field_examples = {
-        "root.other_*": "value",
-    }
-
-    # --- execute ---
-    example = ApatheticSchema_Internal_ValidateTypedDict._get_example_for_field(  # pyright: ignore[reportPrivateUsage]
-        "root.unmatched_field",
-        field_examples,
-    )
-
-    # --- verify ---
-    assert example is None
-
-
-def test_validate_typed_dict_field_examples_exact_match() -> None:
-    """Field examples should support exact path matching."""
-    # --- setup ---
-    field_examples = {
-        "root.include": '["src"]',
-        "root.out": '"dist"',
-    }
-
-    # --- execute and verify ---
-    example1 = ApatheticSchema_Internal_ValidateTypedDict._get_example_for_field(  # pyright: ignore[reportPrivateUsage]
-        "root.include",
-        field_examples,
-    )
-    assert example1 == '["src"]'
-
-    example2 = ApatheticSchema_Internal_ValidateTypedDict._get_example_for_field(  # pyright: ignore[reportPrivateUsage]
-        "root.out",
-        field_examples,
-    )
-    assert example2 == '"dist"'
+    assert example == expected
 
 
 def test_validate_typed_dict_infer_type_label_exception() -> None:
@@ -378,37 +324,3 @@ def test_validate_typed_dict_nested_location_handling() -> None:
     # The location for inner validation should be "inner" not
     # "in top-level configuration.inner"
     assert isinstance(ok, bool)
-
-
-def test_validate_typed_dict_missing_annotations_raises() -> None:
-    """Should raise AssertionError if TypedDict has no __annotations__.
-
-    Note: This tests an internal invariant. In Python 3.10+, all classes
-    have __annotations__ by default, so this is difficult to trigger in practice.
-    The check exists as a defensive measure for internal consistency.
-    """
-    # --- setup ---
-    # Create a type without __annotations__ using type()
-    # This is the only way to create something that truly lacks __annotations__
-    fake_typed_dict = type("FakeTypedDict", (), {})
-    # Verify it doesn't have __annotations__
-    if hasattr(fake_typed_dict, "__annotations__"):
-        # On Python 3.10+, classes get __annotations__ automatically
-        # This test may not be triggerable, but documents the invariant
-        return
-
-    summary = make_summary()
-
-    # --- execute and verify ---
-    # This should raise AssertionError if the invariant is violated
-    # Use pytest.raises for proper exception testing
-    with pytest.raises(AssertionError, match="no __annotations__"):
-        ApatheticSchema_Internal_ValidateTypedDict.validate_typed_dict(
-            context="root",
-            val={},
-            typedict_cls=fake_typed_dict,
-            strict=True,
-            summary=summary,
-            prewarn=set(),
-            field_path="root",
-        )

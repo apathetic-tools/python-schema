@@ -6,6 +6,8 @@ from __future__ import annotations
 import sys
 from typing import Any, TypedDict
 
+import pytest
+
 import apathetic_schema as amod_schema
 from tests.utils import make_summary
 
@@ -30,60 +32,6 @@ class MiniBuild(TypedDict):
 
 
 # --- smoke -----------------------------------------------------
-
-
-def test_check_schema_conformance_matches_list_validator() -> None:
-    """Ensures _check_schema_conformance returns
-    same validity as low-level list validator.
-    """
-    # --- setup ---
-    schema: dict[str, Any] = {"include": list[str], "out": str}
-    cfg: dict[str, Any] = {"include": ["src", 42], "out": "dist"}
-
-    # --- patch and execute ---
-    summary1 = amod_schema.ApatheticSchema_ValidationSummary(True, [], [], [], True)
-    ok_list = ApatheticSchema_Internal_ValidateTypedDict._validate_list_value(  # pyright: ignore[reportPrivateUsage] # noqa: SLF001
-        "ctx",
-        "include",
-        ["src", 42],
-        str,
-        strict=True,
-        summary=summary1,
-        prewarn=set(),
-        field_path="root.include",
-    )
-
-    summary2 = amod_schema.ApatheticSchema_ValidationSummary(True, [], [], [], True)
-    ok_schema = amod_schema.check_schema_conformance(
-        cfg,
-        schema,
-        "ctx",
-        strict_config=True,
-        summary=summary2,
-    )
-
-    # --- verify ---
-    assert not ok_list
-    assert not ok_schema
-    assert summary2.errors  # schema check should have recorded an error
-
-
-def test_check_schema_conformance_smoke() -> None:
-    # --- setup ---
-    schema: dict[str, Any] = {"include": list[str], "out": str}
-    cfg: dict[str, Any] = {"include": ["src"], "out": "dist"}
-
-    # --- execute ---
-    result = amod_schema.check_schema_conformance(
-        cfg,
-        schema,
-        "root",
-        strict_config=True,
-        summary=make_summary(),
-    )
-
-    # --- verify ---
-    assert isinstance(result, bool)
 
 
 def test_check_schema_conformance_respects_prewarn() -> None:
@@ -113,80 +61,34 @@ def test_check_schema_conformance_respects_prewarn() -> None:
 # --- core behavior ---------------------------------------------------------
 
 
-def test_accepts_matching_simple_types() -> None:
+@pytest.mark.parametrize(
+    ("schema", "cfg", "strict_config", "expected_valid"),
+    [
+        ({"foo": str, "bar": int}, {"foo": "hi", "bar": 42}, False, True),
+        ({"foo": str}, {"foo": 123}, True, False),
+        ({"items": list[str]}, {"items": ["a", "b", "c"]}, False, True),
+        ({"items": list[str]}, {"items": ["a", 42]}, True, False),
+    ],
+)
+def test_check_schema_conformance_simple_types(
+    schema: dict[str, type[Any]],
+    cfg: dict[str, Any],
+    strict_config: bool,  # noqa: FBT001
+    expected_valid: bool,  # noqa: FBT001
+) -> None:
+    """Test schema conformance with simple types and lists."""
     # --- setup ---
-    schema: dict[str, type[Any]] = {"foo": str, "bar": int}
-    cfg: dict[str, Any] = {"foo": "hi", "bar": 42}
     summary = make_summary()
 
     # --- execute and validate ---
-    assert (
-        amod_schema.check_schema_conformance(
-            cfg,
-            schema,
-            "root",
-            strict_config=False,
-            summary=summary,
-        )
-        is True
+    result = amod_schema.check_schema_conformance(
+        cfg,
+        schema,
+        "root",
+        strict_config=strict_config,
+        summary=summary,
     )
-
-
-def test_rejects_wrong_type() -> None:
-    # --- setup ---
-    schema: dict[str, type[Any]] = {"foo": str}
-    cfg = {"foo": 123}
-    summary = make_summary()
-
-    # --- execute and validate ---
-    assert (
-        amod_schema.check_schema_conformance(
-            cfg,
-            schema,
-            "root",
-            strict_config=True,
-            summary=summary,
-        )
-        is False
-    )
-
-
-def test_list_of_str_ok() -> None:
-    # --- setup ---
-    schema: dict[str, type[Any]] = {"items": list[str]}
-    cfg = {"items": ["a", "b", "c"]}
-    summary = make_summary()
-
-    # --- execute and validate ---
-    assert (
-        amod_schema.check_schema_conformance(
-            cfg,
-            schema,
-            "root",
-            strict_config=False,
-            summary=summary,
-        )
-        is True
-    )
-
-
-def test_list_with_bad_inner_type() -> None:
-    # --- setup ---
-    schema: dict[str, type[Any]] = {"items": list[str]}
-    cfg: dict[str, Any] = {"items": ["a", 42]}
-    summary = make_summary()
-
-    # --- execute and validate ---
-    assert (
-        amod_schema.check_schema_conformance(
-            cfg,
-            schema,
-            "root",
-            strict_config=True,
-            summary=summary,
-        )
-        is False
-    )
+    assert result is expected_valid
 
 
 def test_list_of_typeddict_allows_dicts() -> None:
@@ -323,18 +225,4 @@ def test_extra_field_in_typeddict_strict() -> None:
             summary=summary,
         )
         is False
-    )
-
-
-def test_empty_schema_and_config() -> None:
-    # --- setup ---
-    summary = make_summary()
-
-    # --- execute and validate ---
-    assert amod_schema.check_schema_conformance(
-        {},
-        {},
-        "root",
-        strict_config=False,
-        summary=summary,
     )

@@ -2,75 +2,49 @@
 
 from __future__ import annotations
 
+import pytest
+
 import apathetic_schema as amod_schema
 from tests.utils import make_summary
 
 
-def test_collect_msg_appends_to_errors_when_is_error_true() -> None:
+@pytest.mark.parametrize(
+    (
+        "strict",
+        "is_error",
+        "msg",
+        "expected_errors",
+        "expected_warnings",
+        "expected_strict_warnings",
+    ),
+    [
+        (False, True, "bad thing", ["bad thing"], [], []),
+        (True, False, "be careful", [], [], ["be careful"]),
+        (False, False, "heads up", [], ["heads up"], []),
+        (True, True, "kaboom", ["kaboom"], [], []),
+    ],
+)
+def test_collect_msg_routes_to_correct_bucket(
+    strict: bool,  # noqa: FBT001
+    is_error: bool,  # noqa: FBT001
+    msg: str,
+    expected_errors: list[str],
+    expected_warnings: list[str],
+    expected_strict_warnings: list[str],
+) -> None:
+    """Test collect_msg routes messages to correct bucket based on strict mode."""
     # --- setup ---
-    summary = make_summary(strict=False)
+    summary = make_summary(strict=strict)
 
     # --- execute ---
     amod_schema.collect_msg(
-        strict=False,
-        msg="bad thing",
+        strict=strict,
+        msg=msg,
         summary=summary,
-        is_error=True,
+        is_error=is_error,
     )
 
     # --- verify ---
-    assert summary.errors == ["bad thing"]
-    assert summary.warnings == []
-    assert summary.strict_warnings == []
-
-
-def test_collect_msg_appends_to_strict_warnings_when_strict() -> None:
-    # --- setup ---
-    summary = make_summary(strict=True)
-
-    # --- execute ---
-    amod_schema.collect_msg(
-        strict=True,
-        msg="be careful",
-        summary=summary,
-    )
-
-    # --- verify ---
-    assert summary.strict_warnings == ["be careful"]
-    assert summary.errors == []
-    assert summary.warnings == []
-
-
-def test_collect_msg_appends_to_warnings_when_not_strict() -> None:
-    # --- setup ---
-    summary = make_summary(strict=False)
-
-    # --- execute ---
-    amod_schema.collect_msg(
-        strict=False,
-        msg="heads up",
-        summary=summary,
-    )
-
-    # --- verify ---
-    assert summary.warnings == ["heads up"]
-    assert summary.errors == []
-    assert summary.strict_warnings == []
-
-
-def test_collect_msg_error_always_overrides_strict_mode() -> None:
-    # --- setup ---
-    summary = make_summary(strict=True)
-
-    # --- execute ---
-    amod_schema.collect_msg(
-        strict=True,
-        msg="kaboom",
-        summary=summary,
-        is_error=True,
-    )
-
-    # --- verify ---
-    assert summary.errors == ["kaboom"]
-    assert summary.strict_warnings == []
-    assert summary.warnings == []
+    assert summary.errors == expected_errors
+    assert summary.warnings == expected_warnings
+    assert summary.strict_warnings == expected_strict_warnings

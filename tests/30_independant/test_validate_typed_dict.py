@@ -21,9 +21,10 @@ class MiniBuild(TypedDict):
     out: str
 
 
-def test_validate_typed_dict_accepts_dict() -> None:
+def test_validate_typed_dict_accepts_valid_dict() -> None:
+    """Valid dict should pass validation."""
     # --- execute ---
-    result = amod_schema.validate_typed_dict(
+    ok = amod_schema.validate_typed_dict(
         context="root",
         val={"include": ["src"], "out": "dist"},
         typedict_cls=MiniBuild,
@@ -34,7 +35,7 @@ def test_validate_typed_dict_accepts_dict() -> None:
     )
 
     # --- verify ---
-    assert isinstance(result, bool)
+    assert ok is True
 
 
 def test_validate_typed_dict_rejects_non_dict() -> None:

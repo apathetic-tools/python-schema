@@ -25,22 +25,6 @@ ApatheticSchema_Internal_ValidateTypedDict = sys.modules[
 ].ApatheticSchema_Internal_ValidateTypedDict
 
 
-def test_validate_scalar_value_returns_bool() -> None:
-    # --- execute ---
-    result = ApatheticSchema_Internal_ValidateTypedDict._validate_scalar_value(
-        strict=True,
-        context="ctx",
-        key="x",
-        val="abc",
-        expected_type=str,
-        summary=make_summary(),
-        field_path="root.x",
-    )
-
-    # --- verify ---
-    assert isinstance(result, bool)
-
-
 def test_validate_scalar_value_accepts_correct_type() -> None:
     # --- setup ---
     summary = make_summary()

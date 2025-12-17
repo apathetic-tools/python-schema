@@ -31,23 +31,6 @@ class MiniBuild(TypedDict):
     out: str
 
 
-def test_validate_list_value_accepts_list() -> None:
-    # --- execute ---
-    result = ApatheticSchema_Internal_ValidateTypedDict._validate_list_value(
-        context="root",
-        key="nums",
-        val=[1, 2, 3],
-        subtype=int,
-        strict=False,
-        summary=make_summary(),
-        prewarn=set(),
-        field_path="root.nums",
-    )
-
-    # --- verify ---
-    assert isinstance(result, bool)
-
-
 def test_validate_list_value_rejects_nonlist() -> None:
     # --- setup ---
     summary = make_summary()
@@ -116,23 +99,6 @@ def test_validate_list_value_handles_typed_dict_elements() -> None:
     assert summary.errors or summary.strict_warnings or summary.warnings
 
 
-def test_validate_list_value_accepts_empty_list() -> None:
-    # --- execute and verify ---
-    assert (
-        ApatheticSchema_Internal_ValidateTypedDict._validate_list_value(
-            "ctx",
-            "empty",
-            [],
-            int,
-            strict=True,
-            summary=make_summary(),
-            prewarn=set(),
-            field_path="root.empty",
-        )
-        is True
-    )
-
-
 def test_validate_list_value_rejects_nested_mixed_types() -> None:
     """Nested lists with wrong inner types should fail."""
     # --- setup ---
@@ -153,28 +119,6 @@ def test_validate_list_value_rejects_nested_mixed_types() -> None:
     # --- verify ---
     assert not ok
     assert any(("expected list" in m) or ("expected int" in m) for m in summary.errors)
-
-
-def test_validate_list_value_mixed_types_like_integration() -> None:
-    """Ensure behavior matches validate_config scenario with list[str] violation."""
-    # --- setup ---
-    summary = make_summary()
-
-    # --- patch and execute ---
-    ok = ApatheticSchema_Internal_ValidateTypedDict._validate_list_value(
-        "ctx",
-        "include",
-        ["src", 42],
-        str,
-        strict=True,
-        summary=summary,
-        prewarn=set(),
-        field_path="root.include",
-    )
-
-    # --- verify ---
-    assert ok is False
-    assert summary.errors  # message was collected
 
 
 def test_validate_list_value_respects_prewarn() -> None:

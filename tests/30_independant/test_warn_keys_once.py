@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import Any, cast
+
+import pytest
 
 import apathetic_schema as amod_schema
 from tests.utils import make_summary
@@ -40,75 +42,67 @@ def test_warn_keys_once_no_bad_keys() -> None:
     assert not summary.errors
 
 
-def test_warn_keys_once_with_aggregator_non_strict() -> None:
-    """When agg is provided and strict=False, should aggregate warnings."""
+@pytest.mark.parametrize(
+    (
+        "strict_config",
+        "summary_strict",
+        "expected_valid",
+        "expected_agg_key",
+        "expected_summary_warnings",
+        "expected_summary_strict_warnings",
+    ),
+    [
+        (False, False, True, "warnings", [], []),
+        (True, True, False, "strict_warnings", [], []),
+    ],
+)
+def test_warn_keys_once_with_aggregator(
+    strict_config: bool,  # noqa: FBT001
+    summary_strict: bool,  # noqa: FBT001
+    expected_valid: bool,  # noqa: FBT001
+    expected_agg_key: str,
+    expected_summary_warnings: list[str],
+    expected_summary_strict_warnings: list[str],
+) -> None:
+    """When agg is provided, should aggregate warnings/strict_warnings."""
     # --- setup ---
-    summary = make_summary(strict=False)
+    summary = make_summary(strict=summary_strict)
     agg: amod_schema.ApatheticSchema_SchemaErrorAggregator = {}
     cfg = {"dry_run": True, "valid": "value"}
     bad_keys = {"dry_run"}
+    context = "in top-level configuration" if not strict_config else "in config"
+    msg = (
+        "The 'dry-run' key is deprecated {ctx}"
+        if not strict_config
+        else "Deprecated key {keys} {ctx}"
+    )
 
     # --- execute ---
     valid, found = apathetic_schema.warn_keys_once(
         tag="dry-run",
         bad_keys=bad_keys,
         cfg=cfg,
-        context="in top-level configuration",
-        msg="The 'dry-run' key is deprecated {ctx}",
-        strict_config=False,
+        context=context,
+        msg=msg,
+        strict_config=strict_config,
         summary=summary,
         agg=agg,
     )
 
     # --- verify ---
-    assert valid is True  # non-strict mode
+    assert valid is expected_valid
     assert found == {"dry_run"}
-    assert "warnings" in agg
-    assert "dry-run" in agg["warnings"]
+    assert expected_agg_key in agg
+    assert "dry-run" in agg[expected_agg_key]
     entry = cast(
         "amod_schema.ApatheticSchema_SchErrAggEntry",
-        agg["warnings"]["dry-run"],
+        agg[expected_agg_key]["dry-run"],
     )
-    expected_msg = "The 'dry-run' key is deprecated {ctx}"
-    assert entry["msg"] == expected_msg
-    assert "in top-level configuration" in entry["contexts"]
+    assert entry["msg"] == msg
+    assert context in entry["contexts"]
     # Summary should not be modified when using aggregator
-    assert not summary.warnings
-    assert not summary.strict_warnings
-
-
-def test_warn_keys_once_with_aggregator_strict() -> None:
-    """When agg is provided and strict=True, should aggregate strict warnings."""
-    # --- setup ---
-    summary = make_summary(strict=True)
-    agg: amod_schema.ApatheticSchema_SchemaErrorAggregator = {}
-    cfg = {"dry_run": True}
-    bad_keys = {"dry_run"}
-
-    # --- execute ---
-    valid, found = apathetic_schema.warn_keys_once(
-        tag="dry-run",
-        bad_keys=bad_keys,
-        cfg=cfg,
-        context="in config",
-        msg="Deprecated key {keys} {ctx}",
-        strict_config=True,
-        summary=summary,
-        agg=agg,
-    )
-
-    # --- verify ---
-    assert valid is False  # strict mode makes it invalid
-    assert found == {"dry_run"}
-    assert "strict_warnings" in agg
-    assert "dry-run" in agg["strict_warnings"]
-    entry = cast(
-        "amod_schema.ApatheticSchema_SchErrAggEntry",
-        agg["strict_warnings"]["dry-run"],
-    )
-    expected_msg = "Deprecated key {keys} {ctx}"
-    assert entry["msg"] == expected_msg
-    assert "in config" in entry["contexts"]
+    assert summary.warnings == expected_summary_warnings
+    assert summary.strict_warnings == expected_summary_strict_warnings
 
 
 def test_warn_keys_once_with_aggregator_multiple_contexts() -> None:
@@ -154,12 +148,36 @@ def test_warn_keys_once_with_aggregator_multiple_contexts() -> None:
     assert "context2" in entry["contexts"]
 
 
-def test_warn_keys_once_without_aggregator_non_strict() -> None:
-    """When agg is None and strict=False, should add to warnings immediately."""
+@pytest.mark.parametrize(
+    (
+        "strict_config",
+        "summary_strict",
+        "expected_valid",
+        "expected_warnings_count",
+        "expected_strict_warnings_count",
+    ),
+    [
+        (False, False, True, 1, 0),
+        (True, True, False, 0, 1),
+    ],
+)
+def test_warn_keys_once_without_aggregator(
+    strict_config: bool,  # noqa: FBT001
+    summary_strict: bool,  # noqa: FBT001
+    expected_valid: bool,  # noqa: FBT001
+    expected_warnings_count: int,
+    expected_strict_warnings_count: int,
+) -> None:
+    """When agg is None, should add to warnings/strict_warnings immediately."""
     # --- setup ---
-    summary = make_summary(strict=False)
-    cfg = {"dry_run": True, "other": "value"}
+    summary = make_summary(strict=summary_strict)
+    cfg: dict[str, Any] = {"dry_run": True, "other": "value"}
     bad_keys = {"dry_run"}
+    msg = (
+        "Deprecated key {keys} found {ctx}"
+        if not strict_config
+        else "Deprecated {keys} {ctx}"
+    )
 
     # --- execute ---
     valid, found = apathetic_schema.warn_keys_once(
@@ -167,48 +185,23 @@ def test_warn_keys_once_without_aggregator_non_strict() -> None:
         bad_keys=bad_keys,
         cfg=cfg,
         context="in config",
-        msg="Deprecated key {keys} found {ctx}",
-        strict_config=False,
+        msg=msg,
+        strict_config=strict_config,
         summary=summary,
         agg=None,
     )
 
     # --- verify ---
-    assert valid is True
+    assert valid is expected_valid
     assert found == {"dry_run"}
-    assert len(summary.warnings) == 1
-    assert "dry_run" in summary.warnings[0]
-    assert "in config" in summary.warnings[0]
-    assert not summary.strict_warnings
-    assert not summary.errors
-
-
-def test_warn_keys_once_without_aggregator_strict() -> None:
-    """When agg is None and strict=True, should add to strict_warnings immediately."""
-    # --- setup ---
-    summary = make_summary(strict=True)
-    cfg = {"dry_run": True}
-    bad_keys = {"dry_run"}
-
-    # --- execute ---
-    valid, found = apathetic_schema.warn_keys_once(
-        tag="dry-run",
-        bad_keys=bad_keys,
-        cfg=cfg,
-        context="in config",
-        msg="Deprecated {keys} {ctx}",
-        strict_config=True,
-        summary=summary,
-        agg=None,
-    )
-
-    # --- verify ---
-    assert valid is False  # strict mode
-    assert found == {"dry_run"}
-    assert len(summary.strict_warnings) == 1
-    assert "dry_run" in summary.strict_warnings[0]
-    assert "in config" in summary.strict_warnings[0]
-    assert not summary.warnings
+    assert len(summary.warnings) == expected_warnings_count
+    assert len(summary.strict_warnings) == expected_strict_warnings_count
+    if expected_warnings_count > 0:
+        assert "dry_run" in summary.warnings[0]
+        assert "in config" in summary.warnings[0]
+    if expected_strict_warnings_count > 0:
+        assert "dry_run" in summary.strict_warnings[0]
+        assert "in config" in summary.strict_warnings[0]
     assert not summary.errors
 
 
