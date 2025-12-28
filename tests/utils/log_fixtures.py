@@ -9,7 +9,7 @@ import apathetic_logging as alib_logging
 import apathetic_utils as alib_utils
 import pytest
 
-from .constants import PROGRAM_PACKAGE, PROGRAM_SCRIPT
+from .constants import DEFAULT_TEST_LOG_LEVEL, PROGRAM_PACKAGE, PROGRAM_SCRIPT
 
 
 SAFE_TRACE = alib_logging.makeSafeTrace(icon="📏")
@@ -33,7 +33,7 @@ def direct_logger() -> alib_logging.Logger:
     # Give each test's logger a unique name for debug clarity
     name = f"test_logger{_suffix()}"
     logger = alib_logging.Logger(name, enable_color=False)
-    logger.setLevel("test")
+    logger.setLevel(DEFAULT_TEST_LOG_LEVEL)
     return logger
 
 
@@ -55,7 +55,7 @@ def module_logger(
     # can find it when it looks up the logger by name in emit()
     original_logger_name = PROGRAM_PACKAGE
     new_logger = alib_logging.Logger(original_logger_name, enable_color=False)
-    new_logger.setLevel("test")
+    new_logger.setLevel(DEFAULT_TEST_LOG_LEVEL)
     # Use setPropagate() instead of direct assignment to set _propagate_explicit flag.
     # This prevents apathetic_logging.getLogger() from later resetting propagate=True
     # when it's called elsewhere (e.g., in load_jsonc), which would remove our handler.
@@ -89,11 +89,8 @@ def module_logger(
         stitch_hints={"/dist/", "stitched", f"{PROGRAM_SCRIPT}.py", ".pyz"},
     )
 
-    # Also patch _APP_LOGGER directly in both source and stitched modules
-    monkeypatch.setattr("zipbundler.logs._APP_LOGGER", new_logger)
-
     # Patch in stitched module if it exists
-    stitched_module = __import__("sys").modules.get("zipbundler")
+    stitched_module = __import__("sys").modules.get(PROGRAM_PACKAGE)
     if stitched_module and hasattr(stitched_module, "logs"):
         monkeypatch.setattr(stitched_module.logs, "_APP_LOGGER", new_logger)
 
